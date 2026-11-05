@@ -450,6 +450,8 @@ let maxEvents=[],maxResults=[],setMenuOptions=[];
 async function loadMax(){try{
  maxEvents=await api(query('max_test_events','select=*&published=eq.true&order=test_date.desc'))||[];
  maxResults=await api(query('max_test_results','select=*&player_id=eq.'+profile.id+'&order=created_at.desc'))||[];
+ const maxInvalidations=await api(query('max_result_invalidations','select=result_id'))||[];
+ const invalidIds=new Set(maxInvalidations.map(r=>r.result_id));
  $('maxEvent').innerHTML=maxEvents.map(e=>`<option value="${safe(e.id)}">${safe(e.test_date)} ${safe(e.title)}</option>`).join('')||'<option value="">公開中の測定会はありません</option>';
  $('myMaxList').innerHTML='<h3>提出履歴</h3>'+(maxResults.map(r=>`<div class="item"><strong>${safe(maxNames[r.exercise]||r.exercise)}</strong><small>${invalidIds.has(r.id)?'無効化済み（正式MAX対象外）':safe(r.status)} ／ ${r.approved_weight_kg??'-'}kg ／ 動画確認：${r.video_verified?'済':'未'}</small></div>`).join('')||'<p class="muted">提出はまだありません。</p>');
  let ranks=await api('/rest/v1/rpc/sanno_my_max_ranks',{method:'POST',body:'{}'});
