@@ -226,6 +226,7 @@ function sannoCoachSwitch(view){
    const selected=el.dataset.coachSection===view;
    el.hidden=!selected;
    el.classList.toggle('sanno-visible',selected);
+   el.style.removeProperty('display');
   });
 }
 document.querySelectorAll('[data-coach-view]').forEach(b=>b.addEventListener('click',()=>{sannoCoachSwitch(b.dataset.coachView);if(b.dataset.coachView==='players'&&typeof sannoLoadPlayers==='function')sannoLoadPlayers()}));
@@ -540,7 +541,7 @@ async function sannoLoadPlayers(){
  if(profile?.role!=='coach')return;
  const box=$('players');
  const panel=box?.closest('[data-coach-section="players"]');
- if(panel){panel.hidden=false;panel.classList.add('sanno-visible');panel.style.setProperty('display','block','important');}
+ // 表示はsannoCoachSwitchのみで管理。非表示タブをデータ取得で開かない。
  if(!box){msg('PLAYERS：表示領域が見つかりません',true);return;}
  box.innerHTML='<p class="muted">LOADING / 選手一覧を取得中…</p>';
  try{
