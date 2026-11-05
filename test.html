@@ -609,7 +609,7 @@ async function sannoExportReport(id){
   const names=['MAX STRENGTH','EXPLOSIVE','SPEED','MOMENTUM','ENDURANCE','PHYSICAL'];
   const fmt=(v,d=1)=>v==null||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d).replace(/\.0$/,'');
   const signed=(v,unit='')=>v==null?'NO TREND':(v>=0?'+':'')+fmt(v)+unit;
-  const radar=(()=>{const cx=145,cy=116,r=79;const pos=(i,score)=>{const a=-Math.PI/2+i*Math.PI/3;return [cx+Math.cos(a)*r*score/10,cy+Math.sin(a)*r*score/10]};let lines='';for(const n of [2,4,6,8,10])lines+=`<polygon points="${Array.from({length:6},(_,i)=>pos(i,n).join(',')).join(' ')}" fill="none" stroke="#b9b2c5" stroke-width=".7"/>`;for(let i=0;i<6;i++)lines+=`<line x1="${cx}" y1="${cy}" x2="${pos(i,10)[0]}" y2="${pos(i,10)[1]}" stroke="#b9b2c5" stroke-width=".7"/>`;const measured=scores.filter(v=>v!=null).length;return `<svg viewBox="0 0 290 232" role="img" aria-label="測定済み項目の能力評価"><g>${lines}</g>${measured>=3?`<polygon points="${scores.map((v,i)=>pos(i,v||0).join(',')).join(' ')}" fill="#a946f8" fill-opacity=".32" stroke="#e5a3ff" stroke-width="2"/>`:''}${scores.map((v,i)=>v==null?'':`<circle cx="${pos(i,v)[0]}" cy="${pos(i,v)[1]}" r="3.5" fill="#f3c7ff"/>`).join('')}${names.map((n,i)=>{const [x,y]=pos(i,12.5);return `<text x="${x}" y="${y}" text-anchor="middle" font-size="8" font-weight="700" fill="#30233e">${n}</text>`}).join('')}</svg>`})();
+  const radar=(()=>{const cx=145,cy=116,r=79;const pos=(i,score)=>{const a=-Math.PI/2+i*Math.PI/3;return [cx+Math.cos(a)*r*score/10,cy+Math.sin(a)*r*score/10]};let lines='';for(const n of [2,4,6,8,10])lines+=`<polygon points="${Array.from({length:6},(_,i)=>pos(i,n).join(',')).join(' ')}" fill="none" stroke="#b9b2c5" stroke-width=".7"/>`;for(let i=0;i<6;i++)lines+=`<line x1="${cx}" y1="${cy}" x2="${pos(i,10)[0]}" y2="${pos(i,10)[1]}" stroke="#b9b2c5" stroke-width=".7"/>`;const measured=scores.filter(v=>v!=null).length;return `<svg viewBox="0 0 290 232" role="img" aria-label="測定済み項目の能力評価"><g>${lines}</g>${measured>=3?`<polygon points="${scores.map((v,i)=>pos(i,v||0).join(',')).join(' ')}" fill="#ffffff" fill-opacity=".28" stroke="#ffffff" stroke-width="2"/>`:''}${scores.map((v,i)=>v==null?'':`<circle cx="${pos(i,v)[0]}" cy="${pos(i,v)[1]}" r="3.5" fill="#ffffff"/>`).join('')}${names.map((n,i)=>{const [x,y]=pos(i,12.5);return `<text x="${x}" y="${y}" text-anchor="middle" font-size="8" font-weight="700" fill="#30233e">${n}</text>`}).join('')}</svg>`})();
   const metric=(label,val,unit='')=>`<div class="metric"><small>${label}</small><b>${fmt(val)}${val==null?'':unit}</b></div>`;
   const changes=[['BACK SQUAT',last('squat'),delta('squat')],['BENCH PRESS',last('bench'),delta('bench')],['CLEAN',last('clean'),delta('clean')]];
   const bodyChanges=(key)=>{const r=bodyRows.filter(x=>x[key]!=null);return r.length>1?Number(r[r.length-1][key])-Number(r[0][key]):null};
@@ -662,7 +662,53 @@ body{background:white;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 header,.metric,.maxline,.change,.radar,.heading,.target,.comment{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .grid{gap:3mm}.section{margin-bottom:2.5mm}
 }
-</style></head><body><div class="toolbar"><button onclick="window.print()">PRINT / SAVE PDF</button>　A4 LANDSCAPE · 100% SCALE</div><div class="sheet"><header><div><div class="brand">SANNO ATHLETE LAB</div><div class="title">ATHLETE PERFORMANCE REPORT</div><div class="subtitle">BUILT BY WORK. PROVEN BY NUMBERS.</div></div><div class="subtitle">TRAIN · ANALYZE · IMPROVE<br>${safe(date)}</div></header><div class="identity"><div><div class="name">${safe(p.display_name||'名前未設定')}</div><div class="meta">${safe(p.training_group||'所属未設定')}　${safe(p.grade||'')}　${safe(p.position||'')}</div></div><div class="meta">REPORT DATE　${safe(date)}</div></div><div class="grid"><div class="column"><div class="section"><h3 class="heading">01 / BODY COMPOSITION</h3><div class="metrics">${metric('HEIGHT',p.height_cm,'cm')}${metric('WEIGHT',p.weight_kg,'kg')}${metric('BODY FAT',fat,'%')}${metric('FFMI',ffmi)}</div></div><div class="section"><h3 class="heading">02 / APPROVED MAX</h3>${[['squat','BACK SQUAT'],['bench','BENCH PRESS'],['clean','CLEAN']].map(([k,n])=>`<div class="maxline"><small>${n}</small><strong>${fmt(last(k))}${last(k)==null?'':' kg'}</strong></div>`).join('')}</div><div class="section"><h3 class="heading">03 / FIELD TEST</h3><div class="metrics">${metric('40m SPRINT',sprint,'s')}${metric('BRONCO',bronco,'s')}${metric('SPRINT MOMENTUM',momentum)}${metric('SQ + BP',strength,'kg')}</div><p class="note">SPRINT MOMENTUM = BODY MASS × 40 / SPRINT TIME</p></div></div><div class="column"><div class="section"><h3 class="heading">04 / PERFORMANCE RADAR</h3><div class="radar">${radar}</div><p class="note">SCORES SHOWN ONLY FOR VERIFIED TEST RESULTS</p>${names.map((n,i)=>`<div class="scoreline"><span>${n}</span><b>${fmt(vals[i],i===2?2:1)}${scores[i]==null?'':'　/ '+scores[i]+' pt'}</b></div>`).join('')}</div></div><div class="column"><div class="section"><h3 class="heading">05 / DEVELOPMENT</h3>${changes.map(([n,v,d])=>`<div class="change"><div><small>${n}</small><div><b>${fmt(v)}${v==null?'':' kg'}</b></div></div><strong>${signed(d,' kg')}</strong></div>`).join('')}<div class="change"><div><small>BODY WEIGHT</small><div><b>${fmt(w)} kg</b></div></div><strong>${signed(bodyChanges('weight_kg'),' kg')}</strong></div></div><div class="section"><h3 class="heading">06 / NEXT TARGET</h3><div class="target"><small>NEXT MILESTONE</small><div class="line"></div></div></div><div class="section"><h3 class="heading">07 / COACH MESSAGE</h3><div class="comment"><small>コーチからのメッセージ</small><div class="line"></div><div class="line"></div></div></div></div></div><footer><span>SANNO ATHLETE LAB · STRONGER EVERY DAY</span><span>測定データに基づく個人レポート / ${safe(date)}</span></footer></div></body></html>`;
+
+/* Ver.17.2 BLACK & WHITE GAME REPORT: print-first, no gray background floods */
+@page{size:A4 landscape;margin:6mm}
+body{background:#e9e9e9;color:#111;font-family:Arial,'Helvetica Neue',sans-serif}
+.sheet{width:285mm;min-height:198mm;padding:0 5mm 3mm;background:#fff;color:#111;border:2px solid #111;box-shadow:0 12px 32px #0002}
+.sheet:before{background:repeating-linear-gradient(115deg,transparent 0 12px,#111 12px 13px,transparent 13px 25px);height:5mm;top:30mm;opacity:.18}
+header{height:30mm;margin:0 -5mm;padding:4mm 6mm;background:#111;color:#fff;border-bottom:4px solid #888}
+header:after{border-left:9px solid #fff;border-right:17px solid #666;opacity:.85}
+.brand{font-size:10px;color:#fff;letter-spacing:2px}
+.title{font-size:23px;color:#fff;text-shadow:none;font-style:italic;letter-spacing:1px}
+.subtitle{color:#fff;font-size:9px}
+.identity{padding:3mm 2mm 2mm;border-bottom:3px solid #111}
+.name{font-size:25px;color:#111}
+.meta{color:#333}
+.grid{grid-template-columns:1fr 1.1fr 1fr;gap:3mm;padding-top:3mm}
+.section{margin-bottom:2.5mm;break-inside:avoid}
+.heading{background:#111;color:#fff;border-left:5px solid #777;padding:2mm 2mm 2mm 3mm;font-size:10px;transform:skew(-4deg);letter-spacing:1px}
+.metrics{gap:2mm}
+.metric{background:#fff;border:1.5px solid #222;border-radius:1px;padding:2.5mm;min-height:16mm}
+.metric small{color:#444;font-size:8px}
+.metric b{color:#000;font-size:19px}
+.maxline{background:#fff;border:0;border-bottom:2px solid #222;border-left:5px solid #555;padding:2mm 2.5mm;margin-bottom:1mm}
+.maxline small{color:#222}
+.maxline strong{color:#000;font-size:20px}
+.radar{height:67mm;background:#111;border:2px solid #111}
+.radar svg text{fill:#fff!important}
+.radar svg line,.radar svg polygon{stroke:#ddd}
+.scoreline{color:#111;border-bottom:1px solid #888;padding:1.5mm 2mm}
+.scoreline b{color:#111}
+.change{background:#fff;border:1.5px solid #111;border-left:5px solid #111;border-radius:0;padding:2mm 3mm;margin-bottom:1.5mm}
+.change small{color:#222}
+.change b{color:#111}
+.change strong{color:#111}
+.target,.comment{background:#fff;border:2px solid #111;color:#111;border-radius:0}
+.target{min-height:16mm}.comment{min-height:19mm}
+.target .line,.comment .line{border-color:#777}
+.note{color:#444;font-size:7px}
+footer{color:#444;border-color:#111}
+.toolbar{background:#111;color:#fff}
+.toolbar button{background:#fff;color:#111;border:2px solid #fff}
+@media print{
+html,body{margin:0;padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.sheet{width:100%;height:198mm;min-height:0;margin:0;box-shadow:none;border:2px solid #111;padding-bottom:0}
+header,.heading,.radar{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.grid{gap:3mm}.section{margin-bottom:2mm}
+}
+</style></head><body><div class="toolbar"><button onclick="window.print()">PRINT / SAVE PDF · MONOCHROME</button>　A4 LANDSCAPE · 100% SCALE</div><div class="sheet"><header><div><div class="brand">SANNO ATHLETE LAB</div><div class="title">ATHLETE PERFORMANCE REPORT</div><div class="subtitle">BUILT BY WORK. PROVEN BY NUMBERS.</div></div><div class="subtitle">TRAIN · ANALYZE · IMPROVE<br>${safe(date)}</div></header><div class="identity"><div><div class="name">${safe(p.display_name||'名前未設定')}</div><div class="meta">${safe(p.training_group||'所属未設定')}　${safe(p.grade||'')}　${safe(p.position||'')}</div></div><div class="meta">REPORT DATE　${safe(date)}</div></div><div class="grid"><div class="column"><div class="section"><h3 class="heading">01 / BODY COMPOSITION</h3><div class="metrics">${metric('HEIGHT',p.height_cm,'cm')}${metric('WEIGHT',p.weight_kg,'kg')}${metric('BODY FAT',fat,'%')}${metric('FFMI',ffmi)}</div></div><div class="section"><h3 class="heading">02 / APPROVED MAX</h3>${[['squat','BACK SQUAT'],['bench','BENCH PRESS'],['clean','CLEAN']].map(([k,n])=>`<div class="maxline"><small>${n}</small><strong>${fmt(last(k))}${last(k)==null?'':' kg'}</strong></div>`).join('')}</div><div class="section"><h3 class="heading">03 / FIELD TEST</h3><div class="metrics">${metric('40m SPRINT',sprint,'s')}${metric('BRONCO',bronco,'s')}${metric('SPRINT MOMENTUM',momentum)}${metric('SQ + BP',strength,'kg')}</div><p class="note">SPRINT MOMENTUM = BODY MASS × 40 / SPRINT TIME</p></div></div><div class="column"><div class="section"><h3 class="heading">04 / PERFORMANCE RADAR</h3><div class="radar">${radar}</div><p class="note">SCORES SHOWN ONLY FOR VERIFIED TEST RESULTS</p>${names.map((n,i)=>`<div class="scoreline"><span>${n}</span><b>${fmt(vals[i],i===2?2:1)}${scores[i]==null?'':'　/ '+scores[i]+' pt'}</b></div>`).join('')}</div></div><div class="column"><div class="section"><h3 class="heading">05 / DEVELOPMENT</h3>${changes.map(([n,v,d])=>`<div class="change"><div><small>${n}</small><div><b>${fmt(v)}${v==null?'':' kg'}</b></div></div><strong>${signed(d,' kg')}</strong></div>`).join('')}<div class="change"><div><small>BODY WEIGHT</small><div><b>${fmt(w)} kg</b></div></div><strong>${signed(bodyChanges('weight_kg'),' kg')}</strong></div></div><div class="section"><h3 class="heading">06 / NEXT TARGET</h3><div class="target"><small>NEXT MILESTONE</small><div class="line"></div></div></div><div class="section"><h3 class="heading">07 / COACH MESSAGE</h3><div class="comment"><small>コーチからのメッセージ</small><div class="line"></div><div class="line"></div></div></div></div></div><footer><span>SANNO ATHLETE LAB · STRONGER EVERY DAY</span><span>測定データに基づく個人レポート / ${safe(date)}</span></footer></div></body></html>`;
   popup.document.open();popup.document.write(html);popup.document.close();
  }catch(e){popup.document.body.textContent='レポート作成に失敗しました：'+e.message;msg('レポート出力：'+e.message,true)}
 }
