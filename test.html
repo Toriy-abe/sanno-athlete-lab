@@ -701,6 +701,43 @@ async function sannoExportReport(id){
  .sheet{width:287mm;height:200mm;margin:0;overflow:hidden;page-break-inside:avoid;break-inside:avoid}
  .layout{height:159mm}
 }
+
+/* Ver.17.9: report-window-specific icon sizing and A4 containment */
+.layout .listrow .icon{
+ flex:0 0 10mm!important;width:10mm!important;min-width:10mm!important;
+ height:10mm!important;max-height:10mm!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ overflow:hidden!important;position:relative!important;
+}
+.layout .listrow .icon img{
+ display:block!important;box-sizing:border-box!important;
+ width:9.2mm!important;max-width:9.2mm!important;
+ height:9.2mm!important;max-height:9.2mm!important;
+ object-fit:contain!important;object-position:center!important;
+ margin:0!important;padding:0!important;
+ filter:grayscale(1) contrast(1.5)!important;
+}
+.layout .field .listrow .icon img{
+ width:8.7mm!important;max-width:8.7mm!important;
+ height:8.7mm!important;max-height:8.7mm!important;
+}
+.layout .col.left{overflow:hidden!important}
+.layout .left .player-body{padding:1.5mm 2.5mm 2mm!important}
+.layout .left .identity{margin-bottom:1.2mm!important}
+.layout .left .stats .stat{min-height:13.5mm!important}
+.layout .left .stats .stat strong{padding:1.2mm 0!important}
+.layout .left .list{padding:.3mm 2.5mm!important}
+.layout .left .listrow{min-height:10mm!important;height:10mm!important;padding:.4mm 0!important;gap:2mm!important}
+.layout .left .field .listrow{min-height:9.4mm!important;height:9.4mm!important}
+.layout .left .panel{margin-bottom:1.6mm!important}
+.layout .left .panel-title{padding:1.6mm 2.5mm!important}
+.layout .left .listrow .label{font-size:9.5px!important}
+.layout .left .listrow .value{font-size:16px!important}
+.layout .left .field .listrow .value{font-size:14px!important}
+@media print{
+ .sheet{overflow:hidden!important}
+ .layout .listrow .icon img{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+}
 </style></head><body>
 <div class="toolbar"><button onclick="window.print()">PRINT / SAVE PDF</button> &nbsp; A4 LANDSCAPE · COLOR / MONOCHROME READY</div>
 <main class="sheet">
