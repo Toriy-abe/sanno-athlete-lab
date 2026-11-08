@@ -1305,19 +1305,28 @@ async function loadCoachMax(){if(profile?.role!=='coach')return;try{let [results
       preview.controls=true;preview.playsInline=true;preview.preload='metadata';preview.src=videoUrl;
       const note=document.createElement('p');note.className='muted';
       note.textContent='撮影動画を確認し、端末への保存を行ってください。写真アプリへの自動保存は保証されません。';
-      const save=document.createElement('a');save.href=videoUrl;
-      save.download='SANNO_MAX_'+Date.now()+'.'+(file.name.split('.').pop()||'mp4');
-      save.textContent='⬇ 動画をダウンロード';
+      const save=document.createElement('button');
+      save.type='button';
+      save.className='secondary';
+      save.textContent='📤 動画を保存・共有';
+      save.style.cssText='display:block;width:100%;margin-top:12px;';
+      save.addEventListener('click',async()=>{
+        if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+          try{
+            await navigator.share({files:[file],title:'SANNO MAX TEST'});
+            return;
+          }catch(error){
+            if(error.name==='AbortError')return;
+          }
+        }
+        const link=document.createElement('a');
+        link.href=videoUrl;
+        link.download='SANNO_MAX_'+Date.now()+'.'+(file.name.split('.').pop()||'mp4');
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      });
       result.append(preview,note,save);
-      if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-        const share=document.createElement('button');share.type='button';share.className='secondary';
-        share.textContent='共有・端末に保存';
-        share.addEventListener('click',async()=>{
-          try{await navigator.share({files:[file],title:'SANNO MAX TEST'});}
-          catch(error){if(error.name!=='AbortError')alert('共有できませんでした。ダウンロードをお試しください。');}
-        });
-        result.append(share);
-      }
       input.value='';
     });
     window.addEventListener('pagehide',()=>{if(videoUrl)URL.revokeObjectURL(videoUrl);});
