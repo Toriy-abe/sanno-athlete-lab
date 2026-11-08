@@ -387,12 +387,14 @@ window.sannoCheckApproval=async function(){
  let screen=document.getElementById('sannoPendingScreen');
  if(!screen){
   screen=document.createElement('div');screen.id='sannoPendingScreen';
-  screen.style.cssText='min-height:100vh;background:#10071e;color:#f4eaff;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center';
+  screen.style.cssText='position:fixed;inset:0;z-index:99999;min-height:100vh;overflow-y:auto;background:#10071e;color:#f4eaff;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;box-sizing:border-box';
   document.body.appendChild(screen);
  }
  const status=rows?.[0]?.status||'pending';
  screen.innerHTML='<div style="max-width:440px;width:100%;background:#21112f;border:1px solid #65388d;border-radius:18px;padding:28px"><div style="font-size:12px;letter-spacing:.15em;color:#c59ee9">SANNO ATHLETE LAB</div><h1 style="font-size:25px;margin:20px 0">'+(status==='rejected'?'登録が承認されていません':'コーチの承認待ち')+'</h1><p style="line-height:1.8">登録を受け付けました。コーチが本人確認を行うまで、トレーニング機能は利用できません。</p><button id="sannoPendingReload" style="margin:12px">承認状態を再確認</button><button id="sannoPendingLogout" style="margin:12px">ログアウト</button></div>';
+ show('app'); // Hide login/signup and display the pending overlay.
  document.getElementById('app').classList.add('hidden');
+ screen.classList.remove('hidden');
  document.getElementById('sannoPendingReload').onclick=()=>location.reload();
  document.getElementById('sannoPendingLogout').onclick=()=>{session=null;profile=null;localStorage.removeItem(sessionKey);location.reload()};
  return false;
