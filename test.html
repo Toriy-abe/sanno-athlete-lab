@@ -1243,7 +1243,7 @@ if(edited){
  ex[sannoEditingExercise.index]={...ex[sannoEditingExercise.index],...next};
 }else ex.push(next);
 try{await api(query('workout_menus','id=eq.'+m.id),{method:'PATCH',body:JSON.stringify({exercises:ex})});sannoResetExerciseEditor();await loadMenus();renderCoach();renderMenus();msg(edited?'メニューを更新しました':'種目を追加しました')}catch(e){msg(e.message,true)}};
-start().then(()=>{$('logout').classList.toggle('hidden',!session)});
+if(!new URLSearchParams(location.hash.replace(/^#/,'')).get('type')?.includes('recovery') && !(new URLSearchParams(location.search).get('type')==='recovery') && !new URLSearchParams(location.hash.replace(/^#/,'')).has('error') && !new URLSearchParams(location.search).has('error')){start().then(()=>{$('logout').classList.toggle('hidden',!session)});}
 
 // v0.3 additions. Authorization must be enforced by Supabase RLS and triggers.
 const maxNames={back_squat:'バックスクワット',bench_press:'ベンチプレス',clean:'クリーン'};
@@ -1440,13 +1440,14 @@ el('sannoSaveReset').addEventListener('click',async()=>{
  if(pw!==confirm){el('sannoResetInfo').textContent='確認用パスワードが一致しません';return}
  if(!recoveryToken){el('sannoResetInfo').textContent='再設定リンクをもう一度開いてください';return}
  const b=el('sannoSaveReset');b.disabled=true;
- try{await call('/auth/v1/user',{password:pw},recoveryToken,'PUT');recoveryToken=null;el('sannoNewPassword').value='';el('sannoNewPasswordConfirm').value='';el('sannoResetChange').classList.add('hidden');el('sannoResetInfo').textContent='パスワードを変更しました。「ログイン画面へ戻る」から新しいパスワードでログインしてください。'}
+ try{await call('/auth/v1/user',{password:pw},recoveryToken,'PUT');localStorage.removeItem('sanno_session_v1');recoveryToken=null;el('sannoNewPassword').value='';el('sannoNewPasswordConfirm').value='';el('sannoResetChange').classList.add('hidden');el('sannoResetInfo').textContent='パスワードを変更しました。「ログイン画面へ戻る」から新しいパスワードでログインしてください。'}
  catch(e){el('sannoResetInfo').textContent='変更できません：'+e.message}finally{b.disabled=false}
 });
 // Supabase implicit recovery flow: #access_token=...&type=recovery
 const hash=new URLSearchParams(location.hash.replace(/^#/,''));
 const search=new URLSearchParams(location.search);
 if(hash.get('type')==='recovery'&&hash.get('access_token')){
+ localStorage.removeItem('sanno_session_v1');
  recoveryToken=hash.get('access_token');
  history.replaceState(null,'',location.pathname);
  showReset('change','新しいパスワードを設定してください。');
@@ -1455,6 +1456,7 @@ if(hash.get('type')==='recovery'&&hash.get('access_token')){
  history.replaceState(null,'',location.pathname);
  showReset('request','再設定リンクを確認できません：'+reason+'。再設定メールを送り直してください。');
 }else if(search.get('token_hash')&&search.get('type')==='recovery'){
+ localStorage.removeItem('sanno_session_v1');
  const tokenHash=search.get('token_hash');history.replaceState(null,'',location.pathname);
  showReset('request','再設定リンクを確認しています…');
  call('/auth/v1/verify',{token_hash:tokenHash,type:'recovery'}).then(data=>{
