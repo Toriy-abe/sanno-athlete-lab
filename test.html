@@ -405,34 +405,67 @@ async function loadApprovals(){
  host.innerHTML='<p class="muted">読み込み中...</p>';
  try{
   const [people,approvals]=await Promise.all([
-   api(q('profiles','select=id,display_name,role,grade,training_group&order=display_name.asc&limit=1000')),
+   api(q('profiles','select=id,display_name,role,grade,training_group,admission_year&order=display_name.asc&limit=1000')),
    api(q('player_approvals','select=player_id,status,approved_at&limit=1000'))
   ]);
   const byId=new Map(people.map(p=>[p.id,p]));
-  const rows=approvals.filter(a=>byId.has(a.player_id)&&byId.get(a.player_id).role!=='coach');
+  const rows=approvals.filter(a=>byId.has(a.player_id)&&byId.get(a.player_id).role==='player');
   rows.sort((a,b)=>({pending:0,rejected:1,approved:2}[a.status]??3)-({pending:0,rejected:1,approved:2}[b.status]??3));
+  const today=new Date();
+  const jst=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric'}).formatToParts(today);
+  const getPart=k=>Number(jst.find(x=>x.type===k)?.value);
+  const schoolYear=getPart('year')-(getPart('month')<4?1:0);
   host.innerHTML=rows.length?rows.map(a=>{
    const p=byId.get(a.player_id);
+   const years=[];
+   for(let y=schoolYear;y>=2000;y--)years.push(y);
+   const selected=p.admission_year==null?'':String(p.admission_year);
+   const options='<option value="">入学年度を選択</option>'+years.map(y=>'<option value="'+y+'"'+(selected===String(y)?' selected':'')+'>'+y+'年度</option>').join('');
+   const selector='<label style="display:block;margin-top:12px;font-size:12px" for="sanno-year-'+esc(p.id)+'">入学年度 / ADMISSION YEAR</label><select id="sanno-year-'+esc(p.id)+'" data-sanno-year="'+esc(p.id)+'" style="width:100%;max-width:280px;margin-top:5px">'+options+'</select>';
    const actions=a.status==='pending'||a.status==='rejected'
-    ?'<button type="button" data-sanno-approve="'+esc(p.id)+'">承認</button> '
-    :'<button type="button" data-sanno-revoke="'+esc(p.id)+'">承認取消</button> ';
+    ?'<button type="button" data-sanno-approve="'+esc(p.id)+'">入学年度を設定して承認</button> '
+    :'<button type="button" data-sanno-revoke="'+esc(p.id)+'">承認取消</button> <button type="button" class="secondary" data-sanno-save-year="'+esc(p.id)+'">入学年度を保存</button> ';
    const reject=a.status!=='rejected'?'<button class="secondary" type="button" data-sanno-reject="'+esc(p.id)+'">却下</button>':'';
-   return '<div class="item"><strong>'+esc(p.display_name)+'</strong><small>'+esc(p.grade||'学年未設定')+' ／ '+esc(p.training_group||'グループ未設定')+' ／ '+esc(a.status)+'</small><div style="margin-top:10px">'+actions+reject+'</div></div>';
+   return '<div class="item"><strong>'+esc(p.display_name)+'</strong><small>'+esc(p.grade||'学年未設定')+' ／ '+esc(p.training_group||'グループ未設定')+' ／ '+esc(a.status)+'</small>'+selector+'<div style="margin-top:10px">'+actions+reject+'</div></div>';
   }).join(''):'<p class="muted">承認対象の選手はいません。</p>';
+  const readYear=id=>{
+   const value=host.querySelector('[data-sanno-year="'+id+'"]')?.value;
+   const year=Number(value);
+   if(!value||!Number.isInteger(year)||year<2000||year>schoolYear)throw Error('入学年度を選択してください');
+   return year;
+  };
   for(const [attr,status] of [['data-sanno-approve','approved'],['data-sanno-reject','rejected'],['data-sanno-revoke','pending']]){
    host.querySelectorAll('['+attr+']').forEach(btn=>btn.onclick=async()=>{
     const id=btn.getAttribute(attr),p=byId.get(id);
-    if(!confirm(esc(p.display_name)+' を「'+({approved:'承認',rejected:'却下',pending:'承認取消'}[status])+'」しますか？'))return;
+    let year;
+    try{if(status==='approved')year=readYear(id)}catch(e){msg(e.message,true);return}
+    if(!confirm(p.display_name+' を「'+({approved:'承認',rejected:'却下',pending:'承認取消'}[status])+'」しますか？'))return;
     btn.disabled=true;
     try{
-     await api(q('player_approvals','player_id=eq.'+encodeURIComponent(id)),{
-      method:'PATCH',headers:{Prefer:'return=minimal'},
-      body:JSON.stringify({status})
-     });
+     if(status==='approved'){
+      await api(q('rpc/sanno_approve_player'),{method:'POST',body:JSON.stringify({p_player_id:id,p_admission_year:year})});
+     }else{
+      await api(q('player_approvals','player_id=eq.'+encodeURIComponent(id)),{
+       method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({status})
+      });
+     }
      msg('選手の承認状態を更新しました');await loadApprovals();
     }catch(e){msg('承認処理：'+e.message,true);btn.disabled=false}
    });
   }
+  host.querySelectorAll('[data-sanno-save-year]').forEach(btn=>btn.onclick=async()=>{
+   const id=btn.getAttribute('data-sanno-save-year'),p=byId.get(id);
+   let year;
+   try{year=readYear(id)}catch(e){msg(e.message,true);return}
+   if(!confirm(p.display_name+' の入学年度を '+year+'年度 に設定しますか？'))return;
+   btn.disabled=true;
+   try{
+    await api(q('profiles','id=eq.'+encodeURIComponent(id)),{
+     method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({admission_year:year})
+    });
+    msg('入学年度を保存しました');await loadApprovals();
+   }catch(e){msg('入学年度の保存：'+e.message,true);btn.disabled=false}
+  });
  }catch(e){host.innerHTML='<p class="notice">承認一覧の取得に失敗しました。</p>';msg('承認一覧：'+e.message,true)}
 }
 document.getElementById('sannoApprovalRefresh')?.addEventListener('click',loadApprovals);
