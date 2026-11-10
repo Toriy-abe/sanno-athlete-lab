@@ -351,9 +351,9 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
   <h2>RANKING<small class="jp-sub">ランキング</small></h2>
   <p class="muted">承認済みの正式MAX記録を表示します。</p>
   <div class="sanno-rank-switch" role="group" aria-label="ランキングの種類">
-    <button type="button" data-rank-mode="latest" class="active">LATEST MAX<small>自分の最新MAX</small></button>
-    <button type="button" data-rank-mode="pr">PERSONAL BEST<small>自分の自己ベスト</small></button>
-    <button type="button" data-rank-mode="all">ALL-TIME<small>歴代ランキング</small></button>
+    <button type="button" data-rank-mode="latest" class="active">LATEST MAX<small>最新MAX TOP10</small></button>
+    <button type="button" data-rank-mode="pr">PERSONAL BEST<small>自己ベスト TOP10</small></button>
+    <button type="button" data-rank-mode="all">ALL-TIME<small>歴代 TOP10</small></button>
   </div>
   <div class="sanno-rank-switch sanno-rank-exercises" role="group" aria-label="種目">
     <button type="button" data-rank-exercise="back_squat" class="active">SQ</button>
@@ -1533,49 +1533,58 @@ if(hash.get('type')==='recovery'&&hash.get('access_token')){
   showReset('change','新しいパスワードを設定してください。');
  }).catch(e=>showReset('request','リンクを確認できません：'+e.message+'。再設定メールを送り直してください。'));
 }
-})();</script><script id="sanno-ranking-v1">(function(){
+})();</script><script id="sanno-ranking-v2">(function(){
 'use strict';
-const exerciseNames={back_squat:'バックスクワット',bench_press:'ベンチプレス',clean:'クリーン'};
-let mode='latest',exercise='back_squat',cache={};
+const names={back_squat:'バックスクワット',bench_press:'ベンチプレス',clean:'クリーン'};
+let mode='latest',exercise='back_squat',cache={},requestSequence=0;
 const el=id=>document.getElementById(id);
-const escapeText=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-const readableStatus=value=>({current:'現役',graduated:'卒業',expired:'閲覧期限終了',enrolled:'現役',graduate:'卒業'}[value]||value||'');
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const school=v=>({grade_1:'1年',grade_2:'2年',grade_3:'3年',graduate_view:'卒業',expired:'卒業',current:'現役',graduated:'卒業'}[v]||v||'');
+const isCoach=()=>typeof profile!=='undefined'&&profile?.role==='coach';
+const userId=()=>typeof session!=='undefined'?session?.user?.id:null;
+function entry(row,rank,weight,label,meta,self){
+ return '<div class="sanno-ranking-entry'+(self?' is-self':'')+'"><span class="sanno-ranking-position">'+(rank==null?'—':esc(rank)+'位')+'</span><span class="sanno-ranking-name">'+esc(label||'名前未設定')+'<small class="sanno-ranking-meta">'+esc(meta||'')+'</small></span><span class="sanno-ranking-kg">'+esc(weight)+' kg</span></div>';
+}
 function render(){
- const target=el('sannoRankingResults'),status=el('sannoRankingStatus');
- if(!target||!status)return;
- const rows=cache[mode];
+ const target=el('sannoRankingResults'),status=el('sannoRankingStatus');if(!target||!status)return;
+ const key=(isCoach()?'coach':'player')+':'+mode,rows=cache[key];
  if(!rows){target.innerHTML='';status.textContent='取得中…';return;}
- status.textContent=exerciseNames[exercise]+' ／ '+(mode==='all'?'歴代自己ベスト':mode==='pr'?'自分の自己ベスト':'自分の最新MAX');
- const list=rows.filter(row=>row.exercise===exercise);
+ status.textContent=names[exercise]+' ／ '+(mode==='all'?'歴代自己ベスト TOP10':mode==='pr'?'自己ベスト TOP10':'最新MAX TOP10');
+ const list=rows.filter(r=>r.exercise===exercise),selfId=userId();
  if(!list.length){target.innerHTML='<p class="muted">表示できる承認済み記録はありません。</p>';return;}
  if(mode==='all'){
-  target.innerHTML=list.map(row=>'<div class="sanno-ranking-entry'+(row.player_id===window.sannoRankingCurrentUserId?' is-self':'')+'"><span class="sanno-ranking-position">'+escapeText(row.all_time_rank)+'位</span><span class="sanno-ranking-name">'+escapeText(row.display_name||'名前未設定')+'<small class="sanno-ranking-meta">'+escapeText(readableStatus(row.school_status))+'</small></span><span class="sanno-ranking-kg">'+escapeText(row.pr_kg)+' kg</span></div>').join('');
+  const ordered=[...list].sort((a,b)=>Number(a.all_time_rank)-Number(b.all_time_rank)||String(a.display_name||'').localeCompare(String(b.display_name||''),'ja'));
+  const top=ordered.slice(0,10),mine=ordered.find(r=>r.player_id===selfId);
+  target.innerHTML='<p class="muted">歴代ランキング 上位10名</p>'+top.map(r=>entry(r,r.all_time_rank,r.pr_kg,r.display_name,school(r.school_status),r.player_id===selfId)).join('')+
+   (mine&&!top.includes(mine)?'<p class="muted" style="margin-top:18px">あなたの順位（TOP10圏外）</p>'+entry(mine,mine.all_time_rank,mine.pr_kg,mine.display_name,school(mine.school_status),true):'');
+ }else if(isCoach()){
+  const rankKey=mode==='pr'?'pr_rank':'latest_rank',weightKey=mode==='pr'?'pr_kg':'latest_max_kg';
+  const ordered=[...list].filter(r=>r[rankKey]!=null&&r[weightKey]!=null).sort((a,b)=>Number(a[rankKey])-Number(b[rankKey])||String(a.display_name||'').localeCompare(String(b.display_name||''),'ja'));
+  const top=ordered.slice(0,10);
+  target.innerHTML=top.length?'<p class="muted">現役選手 上位10名</p>'+top.map(r=>entry(r,r[rankKey],r[weightKey],r.display_name,'現役チーム内',r.player_id===selfId)).join(''):'<p class="muted">表示できる承認済み記録はありません。</p>';
  }else{
-  const row=list[0],weight=mode==='pr'?row.my_pr_kg:row.my_max_kg;
-  target.innerHTML='<div class="sanno-ranking-entry is-self"><span class="sanno-ranking-position">'+(row.team_rank==null?'—':escapeText(row.team_rank)+'位')+'</span><span class="sanno-ranking-name">自分の記録<small class="sanno-ranking-meta">'+(row.team_rank==null?'現役順位の対象外':'現役チーム内の順位')+'</small></span><span class="sanno-ranking-kg">'+escapeText(weight)+' kg</span></div>'+(typeof profile!=='undefined'&&profile?.role==='coach'?'<p class="muted">※このタブは本人の記録のみです。コーチ向け全選手の最新MAX・PR一覧は、専用データ取得機能の確認後に追加します。</p>':'');
+  const r=list[0],weight=mode==='pr'?r.my_pr_kg:r.my_max_kg;
+  target.innerHTML='<p class="muted">あなたの記録と現役チーム内順位</p>'+entry(r,r.team_rank,weight,'自分の記録',r.team_rank==null?'現役順位の対象外':'現役チーム内',true);
  }
 }
 async function load(force=false){
  if(force)cache={};
- if(cache[mode]){render();return;}
+ const coach=isCoach(),requested=mode,key=(coach?'coach':'player')+':'+requested;
+ if(cache[key]){render();return;}
+ const token=++requestSequence;
  el('sannoRankingStatus').textContent='取得中…';el('sannoRankingResults').innerHTML='';
  try{
-  if(typeof api!=='function'||!session?.access_token)throw Error('ログイン状態を確認してください');
-  const fn={latest:'sanno_my_max_ranks',pr:'sanno_my_pr_ranks',all:'sanno_all_time_pr_ranks'}[mode];
-  const requested=mode;
+  if(typeof api!=='function'||typeof session==='undefined'||!session?.access_token)throw Error('ログイン状態を確認してください');
+  const fn=requested==='all'?'sanno_all_time_pr_ranks':coach?'sanno_coach_max_pr_ranks':requested==='pr'?'sanno_my_pr_ranks':'sanno_my_max_ranks';
   const result=await api('/rest/v1/rpc/'+fn,{method:'POST',body:'{}'});
-  cache[requested]=Array.isArray(result)?result:[];
-  window.sannoRankingCurrentUserId=session?.user?.id;
-  if(mode===requested)render();
- }catch(error){el('sannoRankingStatus').textContent='取得に失敗しました';el('sannoRankingResults').textContent=error?.message||'通信エラー';}
+  if(!Array.isArray(result))throw Error('ランキングデータの形式が正しくありません');
+  cache[key]=result;
+  if(token===requestSequence&&mode===requested)render();
+ }catch(error){if(token!==requestSequence)return;el('sannoRankingStatus').textContent='取得に失敗しました';el('sannoRankingResults').textContent=error?.message||'通信エラー';}
 }
 const nav=document.querySelector('[data-tab="ranking"]');
 if(nav)nav.addEventListener('click',()=>load());
-document.querySelectorAll('[data-rank-mode]').forEach(button=>button.addEventListener('click',()=>{
- mode=button.dataset.rankMode;document.querySelectorAll('[data-rank-mode]').forEach(b=>b.classList.toggle('active',b===button));load();
-}));
-document.querySelectorAll('[data-rank-exercise]').forEach(button=>button.addEventListener('click',()=>{
- exercise=button.dataset.rankExercise;document.querySelectorAll('[data-rank-exercise]').forEach(b=>b.classList.toggle('active',b===button));render();
-}));
+document.querySelectorAll('[data-rank-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.rankMode;document.querySelectorAll('[data-rank-mode]').forEach(x=>x.classList.toggle('active',x===b));load();}));
+document.querySelectorAll('[data-rank-exercise]').forEach(b=>b.addEventListener('click',()=>{exercise=b.dataset.rankExercise;document.querySelectorAll('[data-rank-exercise]').forEach(x=>x.classList.toggle('active',x===b));render();}));
 el('sannoRankingRefresh')?.addEventListener('click',()=>load(true));
 })();</script></body></html>
