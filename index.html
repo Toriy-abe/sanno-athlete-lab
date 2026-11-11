@@ -352,7 +352,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <section class="card hidden" id="setup"><h2>初期設定</h2><p class="muted">公開前にSupabaseの接続情報を設定してください。接続情報はブラウザ内に保存されます。</p><label>Supabase プロジェクトURL</label><input id="url" placeholder="https://xxxx.supabase.co"/><label>公開用キー（publishable / anon）</label><input id="key" placeholder="sb_publishable_..."/><p><button id="saveConfig">接続情報を保存</button></p><small>service_roleキーや秘密鍵は絶対に入力しないでください。</small></section>
 <section class="card hidden" id="login"><h2>LOGIN<small class="jp-sub">ログイン</small></h2><p class="muted">登録済みのメールアドレスとパスワードでログインしてください。</p><label>メールアドレス</label><input autocomplete="email" id="email" type="email"/><label>パスワード</label><input autocomplete="current-password" id="password" type="password"/><p><button id="loginBtn">ログインする</button></p><p><button class="outline" id="openSignup" type="button">新規登録はこちら（選手）</button></p><p><button class="outline" id="sannoForgotPassword" type="button">パスワードを忘れた方はこちら</button></p><small>初めて利用する選手は新規登録してください。コーチ権限は付与されません。</small><p class="hidden"><button class="outline" id="changeConfig" type="button">接続先を変更</button></p></section>
 <section class="card hidden" id="sannoResetPassword" style="max-width:720px;margin:20px auto"><h2>PASSWORD RESET<small class="jp-sub">パスワード再設定</small></h2><p id="sannoResetInfo" class="muted">登録済みのメールアドレスを入力してください。</p><div id="sannoResetRequest"><label for="sannoResetEmail">メールアドレス</label><input id="sannoResetEmail" type="email" autocomplete="email"/><p><button type="button" id="sannoSendReset">再設定メールを送信</button></p></div><div id="sannoResetChange" class="hidden"><label for="sannoNewPassword">新しいパスワード（8文字以上）</label><input id="sannoNewPassword" type="password" autocomplete="new-password"/><label for="sannoNewPasswordConfirm">新しいパスワード（確認）</label><input id="sannoNewPasswordConfirm" type="password" autocomplete="new-password"/><p><button type="button" id="sannoSaveReset">新しいパスワードを保存</button></p></div><p><button type="button" class="outline" id="sannoResetBack">ログイン画面へ戻る</button></p></section>
-<section class="card hidden" id="signup"><h2>NEW PLAYER<small class="jp-sub">選手の新規登録</small></h2><p class="muted">氏名・メールアドレス・パスワードを入力してください。登録は選手専用です。</p><label for="signupName">氏名（表示名）</label><input id="signupName" autocomplete="name" maxlength="80"/><label for="signupEmail">メールアドレス</label><input id="signupEmail" type="email" autocomplete="email"/><label for="signupPassword">パスワード（8文字以上）</label><input id="signupPassword" type="password" autocomplete="new-password"/><label for="signupConfirm">パスワード（確認）</label><input id="signupConfirm" type="password" autocomplete="new-password"/><p><button id="signupBtn" type="button">選手として登録する</button></p><p><button class="outline" id="backToLogin" type="button">ログイン画面に戻る</button></p><small>メール確認が有効な場合は、届いた確認メールの案内に従ってください。</small></section>
+<section class="card hidden" id="signup"><h2>NEW PLAYER<small class="jp-sub">選手の新規登録</small></h2><p class="muted">氏名・入学年度・性別・メールアドレス・パスワードを入力してください。登録は選手専用です。</p><label for="signupName">氏名（表示名）</label><input id="signupName" autocomplete="name" maxlength="80"/><label for="signupAdmissionYear">入学年度（必須）</label><select id="signupAdmissionYear" required><option value="">選択してください</option></select><label for="signupSex">性別（必須）</label><select id="signupSex" required><option value="">選択してください</option><option value="male">男子</option><option value="female">女子</option></select><label for="signupEmail">メールアドレス</label><input id="signupEmail" type="email" autocomplete="email"/><label for="signupPassword">パスワード（8文字以上）</label><input id="signupPassword" type="password" autocomplete="new-password"/><label for="signupConfirm">パスワード（確認）</label><input id="signupConfirm" type="password" autocomplete="new-password"/><p><button id="signupBtn" type="button">選手として登録する</button></p><p><button class="outline" id="backToLogin" type="button">ログイン画面に戻る</button></p><small>メール確認が有効な場合は、届いた確認メールの案内に従ってください。</small></section>
 <section class="hidden" id="app"><div class="card"><div class="row between"><div><small class="eyebrow-en">ATHLETE DASHBOARD / ダッシュボード</small><h2 class="welcome-en" id="greeting">WELCOME BACK</h2><small class="welcome-jp" id="greetingJp">おかえりなさい</small></div><span class="pill" id="role">PLAYER</span></div><p class="muted" id="groupLabel"></p></div><nav class="tabs"><button class="active" data-tab="today"><strong>TODAY</strong><small>今日のメニュー</small></button><button data-tab="self"><strong>FREE TRAINING</strong><small>自主トレ</small></button><button class="hidden" data-tab="records">記録</button><button data-tab="max"><strong>MAX TEST</strong><small>最大筋力測定</small></button><button data-tab="ranking"><strong>RANKING</strong><small>ランキング</small></button><button class="hidden" data-tab="setslog">セット別記録</button><button class="hidden" data-tab="attendance">出欠報告</button><button data-tab="profile"><strong>MY PROFILE</strong><small>マイページ</small></button><button class="hidden" data-tab="coach" id="coachTab"><strong>COACH ZONE</strong><small>指導者管理</small></button></nav>
 <div class="tab" id="today"><div class="card"><h2>TODAY'S WORKOUT<small class="jp-sub">今日のメニュー</small></h2><div id="todayContent"></div><div class="hidden" id="inlineRecord"></div></div></div>
 <div class="tab hidden" id="self"><div class="card"><h2>FREE TRAINING<small class="jp-sub">自主トレーニング</small></h2><label>メニューを選ぶ</label><select id="selfDay"><option value="1">DAY 1</option><option value="2">DAY 2</option><option value="3">DAY 3</option><option value="4">DAY 4</option><option value="5">DAY 5</option></select><div id="selfContent"></div><div class="hidden" id="selfInlineRecord"></div></div></div>
@@ -377,7 +377,7 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <div class="tab hidden" id="max"><div class="card"><h2>MAX TEST<small class="jp-sub">最大筋力測定</small></h2><p class="notice">各種目3回まで。成功動画はLINEでCoachに送信してください。動画確認後に正式MAXとして承認されます。</p><div id="maxCurrent"></div><label>測定会</label><select id="maxEvent"></select><label>種目</label><select id="maxExercise"><option value="back_squat">バックスクワット</option><option value="bench_press">ベンチプレス</option><option value="clean">クリーン</option></select><div id="maxAttempts"></div><div class="sanno-max-camera" id="sannoMaxCamera"><button type="button" class="secondary" id="maxCameraButton">📹 フォームを撮影 <small>RECORD VIDEO</small></button><input type="file" id="maxCameraInput" accept="video/*" capture="environment" style="display:none"><p class="muted" style="font-size:12px;margin:8px 0">撮影後は端末に動画が保存されたことを確認してください。動画はサーバーに送信されません。</p><div id="maxCameraResult" aria-live="polite"></div></div><label>測定できなかった理由（該当者のみ）</label><select id="maxReason"><option value="">測定する</option><option value="injury">怪我</option><option value="illness">体調不良</option><option value="schedule">日程</option><option value="other">その他</option></select><p><button id="submitMax">測定結果を提出</button></p><div id="myMaxList"></div></div></div>
 <div class="tab hidden" id="setslog"><div class="card"><h2>セット別重量記録</h2><p class="notice">Coachが指定したセット数・回数に従い、各セットの重量だけを入力します。</p><label>実施日</label><input id="setDate" type="date"/><label>区分</label><select id="setSource"><option value="assigned">配信メニュー</option><option value="self">自主トレ</option></select><label>メニュー</label><select id="setMenu"></select><label>種目</label><select id="setExercise"></select><div id="setWeights"></div><p><button class="secondary" id="sameWeight">1セット目の重量を全セットに反映</button></p><p><button id="saveSets">セット別記録を保存</button></p><div id="setHistory"></div></div></div>
 <div class="tab hidden" id="attendance"><div class="card"><h2>出欠報告</h2><label>日付</label><input id="attendanceDate" type="date"/><label>区分</label><select id="attendanceSource"><option value="assigned">チーム練習</option><option value="self">自主トレ</option></select><label>状況</label><select id="attendanceStatus"><option value="completed">実施した</option><option value="not_completed">実施できなかった</option></select><label>理由（未実施の場合）</label><select id="attendanceReason"><option value="">選択してください</option><option value="injury">怪我</option><option value="illness">体調不良</option><option value="schedule">日程・予定</option><option value="other">その他</option></select><p><button id="saveAttendance">報告を保存</button></p><div id="attendanceHistory"></div></div></div>
-<div class="tab hidden" id="profile"><div class="card"><h3>過去の記録</h3><div id="profileSetHistory"></div><p><button class="secondary" id="profileHistoryRefresh">履歴を更新</button></p><h2>MY PROFILE<small class="jp-sub">マイページ</small></h2><label>表示名</label><input id="displayName" maxlength="60"/><label>所属グループ</label><p id="myGroup"></p><label>RATING STANDARD / 評価区分</label><p id="myRatingGender" class="sanno-gender-badge">確認中…</p><small>評価区分はコーチが設定します。</small>
+<div class="tab hidden" id="profile"><div class="card"><h3>過去の記録</h3><div id="profileSetHistory"></div><p><button class="secondary" id="profileHistoryRefresh">履歴を更新</button></p><h2>MY PROFILE<small class="jp-sub">マイページ</small></h2><label>表示名</label><input id="displayName" maxlength="60"/><label>学年</label><p id="myGrade">確認中…</p><label>所属グループ</label><p id="myGroup"></p><label>RATING STANDARD / 評価区分</label><p id="myRatingGender" class="sanno-gender-badge">確認中…</p><small>評価区分は登録された性別に自動連動します。</small>
 <div class="sanno-body-grid"><div><label>HEIGHT / 身長 (cm)</label><input id="bodyHeight" inputmode="decimal" max="230" min="100" placeholder="例：175.5" step="0.1" type="number"/></div><div><label>WEIGHT / 体重 (kg)</label><input id="bodyWeight" inputmode="decimal" max="250" min="25" placeholder="例：85.0" step="0.1" type="number"/></div></div>
 <label>BODY FAT / 体脂肪率 (%) <small>任意・FFMI計算に使用</small></label><input id="bodyFat" inputmode="decimal" max="65" min="2" placeholder="未測定なら空欄" step="0.1" type="number"/>
 <div class="sanno-body-metrics" id="bodyMetrics">身長・体重を入力するとBMIを表示します。</div><p><button id="saveProfile">SAVE PROFILE / プロフィールを保存</button></p><small>所属グループと指導者権限は指導者が設定します。</small></div></div>
@@ -442,36 +442,59 @@ window.sannoCheckApproval=async function(){
  document.getElementById('sannoPendingLogout').onclick=()=>{session=null;profile=null;localStorage.removeItem(sessionKey);location.reload()};
  return false;
 };
+function sannoSchoolYear(){const d=new Date();return d.getFullYear()-(d.getMonth()<3?1:0)}
+function sannoGradeLabel(year){const grade=sannoSchoolYear()-Number(year)+1;return grade>=1&&grade<=3?grade+'年':grade>3?'卒業年度':'入学前'}
 async function loadApprovals(){
  if(profile?.role!=='coach')return;
  const host=document.getElementById('sannoApprovalList');if(!host)return;
  host.innerHTML='<p class="muted">読み込み中...</p>';
  try{
   const [people,approvals]=await Promise.all([
-   api(q('profiles','select=id,display_name,role,grade,training_group&order=display_name.asc&limit=1000')),
+   api(q('profiles','select=id,display_name,role,grade,training_group,admission_year,sex&order=display_name.asc&limit=1000')),
    api(q('player_approvals','select=player_id,status,approved_at&limit=1000'))
   ]);
   const byId=new Map(people.map(p=>[p.id,p]));
   const rows=approvals.filter(a=>byId.has(a.player_id)&&byId.get(a.player_id).role!=='coach');
   rows.sort((a,b)=>({pending:0,rejected:1,approved:2}[a.status]??3)-({pending:0,rejected:1,approved:2}[b.status]??3));
+  const schoolYear=sannoSchoolYear();
   host.innerHTML=rows.length?rows.map(a=>{
-   const p=byId.get(a.player_id);
+   const p=byId.get(a.player_id),y=Number(p.admission_year)||0;
+   const grade=y?sannoGradeLabel(y):p.grade||'学年未設定';
    const actions=a.status==='pending'||a.status==='rejected'
     ?'<button type="button" data-sanno-approve="'+esc(p.id)+'">承認</button> '
     :'<button type="button" data-sanno-revoke="'+esc(p.id)+'">承認取消</button> ';
    const reject=a.status!=='rejected'?'<button class="secondary" type="button" data-sanno-reject="'+esc(p.id)+'">却下</button>':'';
-   return '<div class="item"><strong>'+esc(p.display_name)+'</strong><small>'+esc(p.grade||'学年未設定')+' ／ '+esc(p.training_group||'グループ未設定')+' ／ '+esc(a.status)+'</small><div style="margin-top:10px">'+actions+reject+'</div></div>';
+   const years=Array.from({length:6},(_,i)=>schoolYear+1-i);
+   if(y&&!years.includes(y))years.push(y);
+   years.sort((a,b)=>b-a);
+   const yearOptions='<option value="">入学年度を選択</option>'+years.map(v=>'<option value="'+v+'"'+(v===y?' selected':'')+'>'+v+'年度</option>').join('');
+   const sexOptions='<option value="">性別を選択</option><option value="male"'+(p.sex==='male'?' selected':'')+'>男子</option><option value="female"'+(p.sex==='female'?' selected':'')+'>女子</option>';
+   return '<div class="item" data-sanno-player="'+esc(p.id)+'"><strong>'+esc(p.display_name)+'</strong><small>'+esc(grade)+' ／ '+esc(p.training_group||'グループ未設定')+' ／ '+esc(a.status)+'</small>'+
+    '<div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px"><label>入学年度<select data-sanno-edit-year>'+yearOptions+'</select></label><label>性別<select data-sanno-edit-sex>'+sexOptions+'</select></label><label>グループ<select data-sanno-edit-group>'+['FWD TIGHT 5','FWD BACK ROW','BKS'].map(g=>'<option value="'+g+'"'+(p.training_group===g?' selected':'')+'>'+g+'</option>').join('')+'</select></label></div>'+
+    '<div style="margin-top:8px"><button class="outline" type="button" data-sanno-save="'+esc(p.id)+'">選手情報を保存</button></div>'+
+    '<div style="margin-top:10px">'+actions+reject+'</div></div>';
   }).join(''):'<p class="muted">承認対象の選手はいません。</p>';
+  host.querySelectorAll('[data-sanno-save]').forEach(btn=>btn.onclick=async()=>{
+   const id=btn.dataset.sannoSave,box=btn.closest('[data-sanno-player]');
+   const year=Number(box.querySelector('[data-sanno-edit-year]').value);
+   const sex=box.querySelector('[data-sanno-edit-sex]').value;
+   const group=box.querySelector('[data-sanno-edit-group]').value;
+   if(!year||year<schoolYear-5||year>schoolYear+1)return msg('入学年度を確認してください',true);
+   if(!['male','female'].includes(sex))return msg('性別を選択してください',true);
+   btn.disabled=true;
+   try{
+    await api('/rest/v1/rpc/sanno_coach_update_player_info',{method:'POST',body:JSON.stringify({p_player_id:id,p_admission_year:year,p_sex:sex,p_training_group:group})});
+    msg('選手情報を保存しました');await loadApprovals();
+   }catch(e){msg('選手情報の保存：'+e.message,true);btn.disabled=false}
+  });
   for(const [attr,status] of [['data-sanno-approve','approved'],['data-sanno-reject','rejected'],['data-sanno-revoke','pending']]){
    host.querySelectorAll('['+attr+']').forEach(btn=>btn.onclick=async()=>{
     const id=btn.getAttribute(attr),p=byId.get(id);
+    if(status==='approved'&&!Number(p.admission_year))return msg('先に入学年度・性別を選択して「選手情報を保存」を押してください',true);
     if(!confirm(esc(p.display_name)+' を「'+({approved:'承認',rejected:'却下',pending:'承認取消'}[status])+'」しますか？'))return;
     btn.disabled=true;
     try{
-     await api(q('player_approvals','player_id=eq.'+encodeURIComponent(id)),{
-      method:'PATCH',headers:{Prefer:'return=minimal'},
-      body:JSON.stringify({status})
-     });
+     await api(q('player_approvals','player_id=eq.'+encodeURIComponent(id)),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({status})});
      msg('選手の承認状態を更新しました');await loadApprovals();
     }catch(e){msg('承認処理：'+e.message,true);btn.disabled=false}
    });
@@ -498,7 +521,7 @@ function sannoCoachSwitch(view){
 }
 document.querySelectorAll('[data-coach-view]').forEach(b=>b.addEventListener('click',()=>{sannoCoachSwitch(b.dataset.coachView);if(b.dataset.coachView==='players'&&typeof sannoLoadPlayers==='function')sannoLoadPlayers()}));
 sannoCoachSwitch('dashboard');
-const $=id=>document.getElementById(id),cfgKey='sanno_config_v1',sessionKey='sanno_session_v1';let cfg=JSON.parse(localStorage.getItem(cfgKey)||'null')||{url:'https://xiqtfetzlzqkbhgyseqh.supabase.co',key:'sb_publishable_8V5gGyppGf-7P8iVSTOetw_QNPUYhIf'},session=JSON.parse(localStorage.getItem(sessionKey)||'null'),profile=null,menus=[],assignments=[];const groups=['FWD TIGHT 5','FWD BACK ROW','BKS'];const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const today=()=>{let d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`};let sannoToastTimer=null;
+const $=id=>document.getElementById(id),cfgKey='sanno_config_v1',sessionKey='sanno_session_v1';let cfg=JSON.parse(localStorage.getItem(cfgKey)||'null')||{url:'https://xiqtfetzlzqkbhgyseqh.supabase.co',key:'sb_publishable_8V5gGyppGf-7P8iVSTOetw_QNPUYhIf'},session=JSON.parse(localStorage.getItem(sessionKey)||'null'),profile=null,menus=[],assignments=[];const signupYearEl=document.getElementById('signupAdmissionYear');if(signupYearEl){const d=new Date(),schoolYear=d.getFullYear()-(d.getMonth()<3?1:0);for(let y=schoolYear+1;y>=schoolYear-5;y--){const o=document.createElement('option');o.value=String(y);o.textContent=y+'年度';signupYearEl.appendChild(o)}}const groups=['FWD TIGHT 5','FWD BACK ROW','BKS'];const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const today=()=>{let d=new Date(),y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),day=String(d.getDate()).padStart(2,'0');return `${y}-${m}-${day}`};let sannoToastTimer=null;
 function sannoToastHeading(t,bad){
  if(bad)return 'ACTION FAILED';
  if(/ログイン/.test(t))return 'LOGIN SUCCESS';
@@ -524,7 +547,7 @@ function msg(t,bad=false){
  box.addEventListener('click',()=>{clearTimeout(sannoToastTimer);dismiss()});
  sannoToastTimer=setTimeout(dismiss,bad?5000:3000);
 }function show(id){['setup','login','signup','app'].forEach(x=>$(x).classList.toggle('hidden',x!==id))}function tab(id){document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('hidden',x.id!==id));document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===id))}document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='coach'&&profile?.role!=='coach')return;tab(b.dataset.tab);if(b.dataset.tab==='records')loadRecords();if(b.dataset.tab==='profile')loadProfileHistory();if(b.dataset.tab==='coach'){sannoCoachSwitch('dashboard');loadCoach();loadCoachMax();sannoLoadTeamOverview();sannoPerformanceLoadPlayers();sannoRadarPlayers()}if(b.dataset.tab==='max')loadMax();if(b.dataset.tab==='setslog')loadSetsUI();if(b.dataset.tab==='attendance')loadAttendance()});
-function headers(auth=true){return {'apikey':cfg.key,'Content-Type':'application/json',...(auth&&session?{'Authorization':'Bearer '+session.access_token}:{})}}async function request(path,options={}){let r=await fetch(cfg.url.replace(/\/$/,'')+path,{...options,headers:{...headers(),...options.headers}});let data=await r.text(),value;try{value=data?JSON.parse(data):null}catch{value=data}if(!r.ok){const detail=[value?.msg,value?.message,value?.error_description,value?.error,value?.code].filter(Boolean).join(' / ');throw Error(`HTTP ${r.status}${detail?'：'+detail:''}（${path.split('?')[0]}）`)}return value}async function refresh(){if(!session?.refresh_token)return false;try{let r=await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:session.refresh_token})});session=r;localStorage.setItem(sessionKey,JSON.stringify(session));return true}catch{session=null;localStorage.removeItem(sessionKey);return false}}async function api(path,options={}){try{return await request(path,options)}catch(e){if(/JWT expired|invalid JWT|401/.test(e.message)&&await refresh())return request(path,options);throw e}}function query(table,params=''){return '/rest/v1/'+table+(params?'?'+params:'')}async function loadProfile(){let p=await api(query('profiles','select=id,display_name,role,training_group,height_cm,weight_kg,body_fat_pct&id=eq.'+encodeURIComponent(session.user.id)));profile=p?.[0];if(!profile)throw Error('プロフィールを読み込めませんでした')}async function loadMenus(){menus=await api(query('workout_menus','select=*&order=training_group.asc,day_number.asc'))||[]}async function loadAssignments(date=today()){assignments=await api(query('daily_assignments','select=*&assigned_date=eq.'+date))||[]}
+function headers(auth=true){return {'apikey':cfg.key,'Content-Type':'application/json',...(auth&&session?{'Authorization':'Bearer '+session.access_token}:{})}}async function request(path,options={}){let r=await fetch(cfg.url.replace(/\/$/,'')+path,{...options,headers:{...headers(),...options.headers}});let data=await r.text(),value;try{value=data?JSON.parse(data):null}catch{value=data}if(!r.ok){const detail=[value?.msg,value?.message,value?.error_description,value?.error,value?.code].filter(Boolean).join(' / ');throw Error(`HTTP ${r.status}${detail?'：'+detail:''}（${path.split('?')[0]}）`)}return value}async function refresh(){if(!session?.refresh_token)return false;try{let r=await request('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:JSON.stringify({refresh_token:session.refresh_token})});session=r;localStorage.setItem(sessionKey,JSON.stringify(session));return true}catch{session=null;localStorage.removeItem(sessionKey);return false}}async function api(path,options={}){try{return await request(path,options)}catch(e){if(/JWT expired|invalid JWT|401/.test(e.message)&&await refresh())return request(path,options);throw e}}function query(table,params=''){return '/rest/v1/'+table+(params?'?'+params:'')}async function loadProfile(){let p=await api(query('profiles','select=id,display_name,role,training_group,admission_year,grade,sex,height_cm,weight_kg,body_fat_pct&id=eq.'+encodeURIComponent(session.user.id)));profile=p?.[0];if(!profile)throw Error('プロフィールを読み込めませんでした')}async function loadMenus(){menus=await api(query('workout_menus','select=*&order=training_group.asc,day_number.asc'))||[]}async function loadAssignments(date=today()){assignments=await api(query('daily_assignments','select=*&assigned_date=eq.'+date))||[]}
 const SANNO_EXERCISE_EN={'ベンチプレス':'BENCH PRESS','ダンベルインクラインベンチ':'INCLINE DB PRESS','インクラインベンチプレス':'INCLINE BENCH PRESS','スクワット':'BACK SQUAT','バックスクワット':'BACK SQUAT','クリーン':'POWER CLEAN','パワークリーン':'POWER CLEAN','デッドリフト':'DEADLIFT','懸垂':'PULL-UP','プッシュアップ':'PUSH-UP','腕立て伏せ':'PUSH-UP','ブルガリアンスクワット':'BULGARIAN SPLIT SQUAT','ルーマニアンデッドリフト':'ROMANIAN DEADLIFT','ショルダープレス':'SHOULDER PRESS','ダンベルベンチプレス':'DB BENCH PRESS','プランク':'PLANK','ランジ':'LUNGE'};
 function sannoExerciseEnglish(name){const n=String(name||'').trim();return SANNO_EXERCISE_EN[n]||'';}
 function sannoPrescription(x){const sets=safe(x.sets??'–'),reps=safe(x.reps??'–'),intensity=String(x.intensity||'').trim();return `<div class="sanno-prescription"><span>${sets} SETS × ${reps} REPS</span>${intensity?`<span class="sanno-intensity">${safe(intensity)}</span>`:''}</div>`;}
@@ -666,7 +689,7 @@ const momentum=weight>0&&sprint>0?weight*40/sprint:null;
 const strength=mx.squat!=null&&mx.bench!=null?mx.squat+mx.bench:null;
 const raw=[strength,mx.clean??null,sprint,momentum,bronco,ffmi];
 // ユーザーが以前指定した評価表で確認できる確定境界のみを採用。
-const ratingNote=await sannoGetCoachNote(id);const scores=sannoRatingScores(raw,ratingNote.gender);
+const ratingSex=await sannoGetRatingSex(id);const scores=sannoRatingScores(raw,ratingSex);
 const cx=160,cy=158,R=111,pt=(i,score)=>{const a=-Math.PI/2+i*2*Math.PI/6;return [cx+R*score/10*Math.cos(a),cy+R*score/10*Math.sin(a)]};
 const poly=v=>v.map((score,i)=>pt(i,score).map(n=>n.toFixed(1)).join(',')).join(' ');
 const grid=[2,4,6,8,10].map(n=>`<polygon points="${poly(Array(6).fill(n))}" fill="none" stroke="rgba(200,170,235,.22)"/>`).join('');
@@ -852,6 +875,10 @@ async function sannoLoadPlayers(){
  }catch(e){box.innerHTML=`<p class="notice">選手一覧を取得できませんでした。<br>${safe(e.message)}</p>`;msg('PLAYERS：'+e.message,true)}
 }
 
+async function sannoGetRatingSex(id){
+ const rows=await api(query('profiles','select=sex&id=eq.'+encodeURIComponent(id)+'&limit=1'));
+ const sex=rows?.[0]?.sex;return sex==='male'||sex==='female'?sex:null;
+}
 async function sannoGetCoachNote(id){
  const rows=await api(query('sanno_coach_report_notes','select=next_target,coach_message,gender,updated_at&player_id=eq.'+encodeURIComponent(id)+'&limit=1'));
  return rows?.[0]||{next_target:'',coach_message:''};
@@ -890,8 +917,9 @@ async function sannoExportReport(id){
   const t=tests[0]||{},sprint=t.sprint_40m_sec==null?null:Number(t.sprint_40m_sec),bronco=t.bronco_sec==null?null:Number(t.bronco_sec);
   const momentum=w>0&&sprint>0?w*40/sprint:null,strength=last('squat')!=null&&last('bench')!=null?last('squat')+last('bench'):null;
   const vals=[strength,last('clean'),sprint,momentum,bronco,ffmi];
-  const scores=sannoRatingScores(vals,coachNote.gender);
-  const ratingNotice=!['male','female'].includes(coachNote.gender)?'評価区分が未設定です（コーチ画面で設定してください）':null;
+  const ratingSex=p.sex==='male'||p.sex==='female'?p.sex:null;
+  const scores=sannoRatingScores(vals,ratingSex);
+  const ratingNotice=!ratingSex?'性別が未登録です（コーチに確認してください）':null;
   const names=['MAX STRENGTH','EXPLOSIVE','SPEED','MOMENTUM','ENDURANCE','PHYSICAL'];
   const fmt=(v,d=1)=>v==null||!Number.isFinite(Number(v))?'—':Number(v).toFixed(d).replace(/\.0$/,'');
   const signed=(v,unit='')=>v==null?'NO TREND':(v>=0?'+':'')+fmt(v)+unit;
@@ -1059,7 +1087,7 @@ async function sannoPlayerDetails(id){
  try{
   const date=today();
   const [people,maxRows,invalidRows,logs,assignRows]=await Promise.all([
-   api(query('profiles','select=id,display_name,role,training_group,height_cm,weight_kg,body_fat_pct&id=eq.'+encodeURIComponent(id))),
+   api(query('profiles','select=id,display_name,role,training_group,admission_year,grade,sex,height_cm,weight_kg,body_fat_pct&id=eq.'+encodeURIComponent(id))),
    api(query('max_test_results','select=id,exercise,approved_weight_kg,created_at&player_id=eq.'+encodeURIComponent(id)+'&status=eq.approved&order=created_at.desc&limit=500')),
    api(query('max_result_invalidations','select=result_id&limit=2000')),
    api(query('training_set_logs','select=*&player_id=eq.'+encodeURIComponent(id)+'&performed_on=eq.'+date+'&order=created_at.desc&limit=200')),
@@ -1096,7 +1124,7 @@ async function sannoPlayerDetails(id){
     <summary>REPORT NOTES / 次の目標・コーチメッセージ</summary>
     <p class="muted">選手ごとのレポートに表示する内容です。保存後は別端末でも共有されます。</p>
     <label for="sannoReportGender">RATING STANDARD / 男女別評価基準</label>
-    <select id="sannoReportGender"><option value="">未設定（評価なし）</option><option value="male">男子 / MALE</option><option value="female">女子 / FEMALE</option></select>
+    <select id="sannoReportGender"><option value="">未設定（評価なし）</option><option value="male">男子 / MALE</option><option value="female">女子 / FEMALE</option></select><small>コーチのみ変更できます。「SAVE NOTES / 保存」で選手の登録性別と評価基準を更新します。</small>
     <label for="sannoNextTarget">NEXT TARGET / 次の目標</label>
     <textarea id="sannoNextTarget" rows="2" maxlength="180" placeholder="例：次回のベンチプレス 145kg"></textarea>
     <label for="sannoCoachMessage">COACH MESSAGE / コーチからのメッセージ</label>
@@ -1138,11 +1166,29 @@ async function sannoPlayerDetails(id){
   });
   $('sannoPrintReport').onclick=()=>sannoExportReport(id);
   const noteTarget=$('sannoNextTarget'),noteMessage=$('sannoCoachMessage'),noteGender=$('sannoReportGender'),noteStatus=$('sannoReportNotesStatus');
-  sannoGetCoachNote(id).then(n=>{noteTarget.value=n.next_target||'';noteMessage.value=n.coach_message||'';noteGender.value=n.gender||'';})
+  sannoGetCoachNote(id).then(n=>{noteTarget.value=n.next_target||'';noteMessage.value=n.coach_message||'';noteGender.value=p.sex==='male'||p.sex==='female'?p.sex:'';})
     .catch(e=>{noteStatus.textContent='読み込み失敗：'+e.message+'（SQL設定を確認してください）';});
   $('sannoSaveReportNotes').onclick=async()=>{
    const button=$('sannoSaveReportNotes');button.disabled=true;noteStatus.textContent='保存中…';
-   try{await sannoSaveCoachNote(id,noteTarget.value.trim(),noteMessage.value.trim(),noteGender.value||null);noteStatus.textContent='保存しました。レポート出力に反映されます。';msg('レポートメッセージを保存しました');}
+   try{
+    const chosenSex=noteGender.value||null;
+    if(chosenSex!==p.sex){
+     if(chosenSex){
+      const year=Number(p.admission_year);
+      if(!year)throw Error('入学年度が未登録です。先に選手情報を確認してください。');
+      await api('/rest/v1/rpc/sanno_coach_update_player_info',{method:'POST',body:JSON.stringify({p_player_id:id,p_admission_year:year,p_sex:chosenSex,p_training_group:p.training_group||null})});
+     }else{
+      await api(query('profiles','id=eq.'+encodeURIComponent(id)),{method:'PATCH',body:JSON.stringify({sex:null})});
+      const verified=await sannoGetRatingSex(id);
+      if(verified!==null)throw Error('性別の未設定への変更が反映されませんでした。コーチの更新権限を確認してください。');
+     }
+     p.sex=chosenSex;
+    }
+    await sannoSaveCoachNote(id,noteTarget.value.trim(),noteMessage.value.trim(),chosenSex);
+    noteStatus.textContent='保存しました。登録性別・評価基準・レポートに反映されます。';
+    msg('性別・評価区分とレポートメッセージを保存しました');
+    sannoLoadAthleteEvaluation(id);
+   }
    catch(e){noteStatus.textContent='保存失敗：'+e.message;msg('レポートメッセージ：'+e.message,true);}
    finally{button.disabled=false;}
   };
@@ -1201,7 +1247,7 @@ async function sannoLoadAthleteEvaluation(id){
   const strength=mx.squat!=null&&mx.bench!=null?mx.squat+mx.bench:null;
   const momentum=w>0&&sprint>0?w*40/sprint:null;
   const values=[strength,mx.clean??null,sprint,momentum,bronco,ffmi];
-  const ratingNote=await sannoGetCoachNote(id);const scores=sannoRatingScores(values,ratingNote.gender);
+  const ratingSex=await sannoGetRatingSex(id);const scores=sannoRatingScores(values,ratingSex);
   const labels=['SQ + BP','CLEAN','40m SPRINT','SPRINT MOMENTUM','BRONCO','FFMI'];
   const units=[' kg',' kg',' 秒','',' 秒',''];
   const measured=scores.filter(v=>v!=null);
@@ -1259,12 +1305,13 @@ async function sannoLoadDevelopment(id){
 }
 async function loadCoach(){if(profile?.role!=='coach')return;renderCoach();await sannoLoadPlayers()}
 $('playersRefresh').onclick=sannoLoadPlayers;
-async function start(){if(!cfg?.url||!cfg?.key){show('setup');return}if(!session){show('login');return}try{await loadProfile();if(!(await sannoCheckApproval()))return;await Promise.all([loadMenus(),loadAssignments()]);$('greeting').textContent=`WELCOME BACK, ${(profile.display_name||'PLAYER').toLocaleUpperCase()}`;$('greetingJp').textContent=`おかえりなさい、${profile.display_name||'選手'}さん`;$('role').textContent=profile.role==='coach'?'COACH':'PLAYER';$('groupLabel').textContent='TRAINING GROUP / 所属：'+(profile.training_group||'未設定');$('myGroup').textContent=profile.training_group||'未設定';$('displayName').value=profile.display_name||'';sannoBodyFill();
+function sannoProfileGradeLabel(year){const d=new Date();const schoolYear=d.getFullYear()-(d.getMonth()<3?1:0);const grade=schoolYear-Number(year)+1;return grade>=1&&grade<=3?grade+'年':grade>3?'卒業年度':'入学前'}
+async function start(){if(!cfg?.url||!cfg?.key){show('setup');return}if(!session){show('login');return}try{await loadProfile();if(!(await sannoCheckApproval()))return;await Promise.all([loadMenus(),loadAssignments()]);$('greeting').textContent=`WELCOME BACK, ${(profile.display_name||'PLAYER').toLocaleUpperCase()}`;$('greetingJp').textContent=`おかえりなさい、${profile.display_name||'選手'}さん`;$('role').textContent=profile.role==='coach'?'COACH':'PLAYER';$('groupLabel').textContent='TRAINING GROUP / 所属：'+(profile.training_group||'未設定');$('myGrade').textContent=profile.admission_year?sannoProfileGradeLabel(profile.admission_year):(profile.grade?(/^[123]$/.test(String(profile.grade))?profile.grade+'年':profile.grade):'未設定（コーチに確認してください）');$('myGroup').textContent=profile.training_group||'未設定';$('displayName').value=profile.display_name||'';sannoBodyFill();
  const genderEl=$('myRatingGender');
- api(query('sanno_coach_report_notes','select=gender&player_id=eq.'+encodeURIComponent(session.user.id)+'&limit=1'))
- .then(rows=>{const g=rows?.[0]?.gender;genderEl.textContent=g==='male'?'男子 / MALE':g==='female'?'女子 / FEMALE':'未設定（コーチに確認してください）';})
+ Promise.resolve(profile.sex)
+ .then(g=>{genderEl.textContent=g==='male'?'男子 / MALE':g==='female'?'女子 / FEMALE':'未設定（コーチに確認してください）';})
  .catch(()=>{genderEl.textContent='表示できません（閲覧権限の設定を確認）';});$('coachTab').classList.toggle('hidden',profile.role!=='coach');$('radarDate').value=today();$('teamDate').value=today();$('assignDate').value=today();$('coachTestDate').value=today();$('setDate').value=today();$('attendanceDate').value=today();await sannoLoadSavedLogs();renderMenus();show('app');tab('today');msg('ログインしました')}catch(e){if(/JWT|401|403|invalid/i.test(e.message)){if(await refresh())return start();session=null;localStorage.removeItem(sessionKey);show('login')}else show('login');msg('接続を確認してください：'+e.message,true)}}
-$('saveConfig').onclick=()=>{let url=$('url').value.trim(),key=$('key').value.trim();if(!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url)||!key||key.includes('service_role')||key.startsWith('sb_secret_'))return msg('URLと公開用キーを確認してください',true);cfg={url,key};localStorage.setItem(cfgKey,JSON.stringify(cfg));show('login');msg('接続先を保存しました')};$('changeConfig').onclick=()=>{show('setup');$('url').value=cfg?.url||'';$('key').value=cfg?.key||''};$('loginBtn').onclick=async()=>{let r;try{r=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})})}catch(e){msg('認証エラー：'+e.message,true);return}session=r;localStorage.setItem(sessionKey,JSON.stringify(session));$('password').value='';try{await start();$('logout').classList.remove('hidden')}catch(e){msg('認証後の読み込みエラー：'+e.message,true)}};$('openSignup').onclick=()=>{if(!cfg?.url||!cfg?.key)return msg('接続先を設定してください',true);$('signupEmail').value=$('email').value.trim();show('signup')};$('backToLogin').onclick=()=>{show('login')};$('signupBtn').onclick=async()=>{const b=$('signupBtn'),name=$('signupName').value.trim(),email=$('signupEmail').value.trim(),pw=$('signupPassword').value,confirm=$('signupConfirm').value;if(!name||name.length>80)return msg('氏名を入力してください（80文字以内）',true);if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return msg('メールアドレスを確認してください',true);if(pw.length<8)return msg('パスワードは8文字以上にしてください',true);if(pw!==confirm)return msg('確認用パスワードが一致しません',true);b.disabled=true;try{const r=await request('/auth/v1/signup',{method:'POST',body:JSON.stringify({email,password:pw,data:{display_name:name}})});$('signupPassword').value='';$('signupConfirm').value='';$('email').value=email;show('login');msg(r?.session?.access_token||r?.access_token?'登録を受け付けました。ログインしてください。':'登録を受け付けました。確認メールが届いた場合は認証後にログインしてください。プロフィールが作成されない場合は管理者に連絡してください。')}catch(e){msg('新規登録できません：'+e.message,true)}finally{b.disabled=false}};$('logout').onclick=async()=>{try{await api('/auth/v1/logout',{method:'POST'})}catch{}session=null;profile=null;localStorage.removeItem(sessionKey);show('login');$('logout').classList.add('hidden');msg('ログアウトしました')};
+$('saveConfig').onclick=()=>{let url=$('url').value.trim(),key=$('key').value.trim();if(!/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url)||!key||key.includes('service_role')||key.startsWith('sb_secret_'))return msg('URLと公開用キーを確認してください',true);cfg={url,key};localStorage.setItem(cfgKey,JSON.stringify(cfg));show('login');msg('接続先を保存しました')};$('changeConfig').onclick=()=>{show('setup');$('url').value=cfg?.url||'';$('key').value=cfg?.key||''};$('loginBtn').onclick=async()=>{let r;try{r=await request('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})})}catch(e){msg('認証エラー：'+e.message,true);return}session=r;localStorage.setItem(sessionKey,JSON.stringify(session));$('password').value='';try{await start();$('logout').classList.remove('hidden')}catch(e){msg('認証後の読み込みエラー：'+e.message,true)}};$('openSignup').onclick=()=>{if(!cfg?.url||!cfg?.key)return msg('接続先を設定してください',true);$('signupEmail').value=$('email').value.trim();show('signup')};$('backToLogin').onclick=()=>{show('login')};$('signupBtn').onclick=async()=>{const b=$('signupBtn'),name=$('signupName').value.trim(),admissionYear=Number($('signupAdmissionYear').value),sex=$('signupSex').value,email=$('signupEmail').value.trim(),pw=$('signupPassword').value,confirm=$('signupConfirm').value;if(!name||name.length>80)return msg('氏名を入力してください（80文字以内）',true);if(!admissionYear||!Number.isInteger(admissionYear))return msg('入学年度を選択してください',true);if(!['male','female'].includes(sex))return msg('性別を選択してください',true);if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return msg('メールアドレスを確認してください',true);if(pw.length<8)return msg('パスワードは8文字以上にしてください',true);if(pw!==confirm)return msg('確認用パスワードが一致しません',true);b.disabled=true;try{const r=await request('/auth/v1/signup',{method:'POST',body:JSON.stringify({email,password:pw,data:{display_name:name,admission_year:admissionYear,sex}})});$('signupPassword').value='';$('signupConfirm').value='';$('email').value=email;show('login');msg(r?.session?.access_token||r?.access_token?'登録を受け付けました。ログインしてください。':'登録を受け付けました。確認メールが届いた場合は認証後にログインしてください。プロフィールが作成されない場合は管理者に連絡してください。')}catch(e){msg('新規登録できません：'+e.message,true)}finally{b.disabled=false}};$('logout').onclick=async()=>{try{await api('/auth/v1/logout',{method:'POST'})}catch{}session=null;profile=null;localStorage.removeItem(sessionKey);show('login');$('logout').classList.add('hidden');msg('ログアウトしました')};
 $('selfDay').onchange=renderMenus;$('saveProfile').onclick=async()=>{let name=$('displayName').value.trim();if(!name)return msg('表示名を入力してください',true);
 const h=sannoNumber('bodyHeight',100,230),w=sannoNumber('bodyWeight',25,250),f=sannoNumber('bodyFat',2,65);
 if([h,w,f].includes(false))return msg('身長・体重・体脂肪率の入力値を確認してください',true);
