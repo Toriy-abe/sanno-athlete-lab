@@ -18,19 +18,62 @@ const json = (body: unknown, status = 200) =>
     },
   });
 
+// 暗号学的に安全で、偏りのない乱数
+function secureRandomInt(max: number): number {
+  if (!Number.isSafeInteger(max) || max <= 0 || max > 256) {
+    throw new Error("Invalid random range");
+  }
+
+  const limit = 256 - (256 % max);
+  const random = new Uint8Array(1);
+
+  while (true) {
+    crypto.getRandomValues(random);
+
+    if (random[0] < limit) {
+      return random[0] % max;
+    }
+  }
+}
+
+// 4種類の文字を必ず含む仮パスワードを生成
 function generatePassword(length = 16): string {
-  const chars =
-    "ABCDEFGHJKLMNPQRSTUVWXYZ" +
-    "abcdefghijkmnopqrstuvwxyz" +
-    "23456789" +
-    "!@#$%*-_";
+  const groups = [
+    "ABCDEFGHJKLMNPQRSTUVWXYZ",
+    "abcdefghijkmnopqrstuvwxyz",
+    "23456789",
+    "!@#$%*-_",
+  ];
 
-  const random = new Uint32Array(length);
-  crypto.getRandomValues(random);
+  if (!Number.isInteger(length) || length < groups.length) {
+    throw new Error("Invalid password length");
+  }
 
-  return Array.from(random, (value) =>
-    chars[value % chars.length]
-  ).join("");
+  const allChars = groups.join("");
+
+  // 各文字種から最低1文字ずつ選択
+  const password: string[] = groups.map(
+    (group) => group[secureRandomInt(group.length)]
+  );
+
+  // 残りの文字を生成
+  while (password.length < length) {
+    password.push(
+      allChars[secureRandomInt(allChars.length)]
+    );
+  }
+
+  // 並び順をランダムに変更
+  for (let i = password.length - 1; i > 0; i--) {
+    const j = secureRandomInt(i + 1);
+
+    [password[i], password[j]] = [
+      password[j],
+      password[i],
+    ];
+  }
+
+  return password.join("");
 }
 
 Deno.serve(async (req) => {
@@ -89,7 +132,7 @@ Deno.serve(async (req) => {
       return json({ error: "Forbidden" }, 403);
     }
 
-    // テスト段階ではパスワード自体を返さない
+    // テスト用：生成したパスワード自体は返さない
     const password = generatePassword();
 
     return json({
