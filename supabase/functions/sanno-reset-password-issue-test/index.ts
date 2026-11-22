@@ -9,24 +9,35 @@ const cors = {
   "Cache-Control": "no-store",
 };
 
-function reply(data: unknown, status = 200) {
+function reply(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
     headers: cors,
   });
 }
 
-function makePassword(): string {
+function generatePassword(): string {
   const chars =
     "ABCDEFGHJKLMNPQRSTUVWXYZ" +
     "abcdefghijkmnopqrstuvwxyz" +
     "23456789" +
     "!@#$%";
 
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
+  const password: string[] = [];
+  const limit = Math.floor(256 / chars.length) * chars.length;
 
-  return Array.from(bytes, (n) => chars[n % chars.length]).join("");
+  while (password.length < 16) {
+    const bytes = new Uint8Array(32);
+    crypto.getRandomValues(bytes);
+
+    for (const byte of bytes) {
+      if (byte >= limit) continue;
+      password.push(chars[byte % chars.length]);
+      if (password.length === 16) break;
+    }
+  }
+
+  return password.join("");
 }
 
 Deno.serve(async (req: Request) => {
@@ -42,9 +53,9 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const auth = req.headers.get("Authorization");
+    const authorization = req.headers.get("Authorization");
 
-    if (!auth?.startsWith("Bearer ")) {
+    if (!authorization?.startsWith("Bearer ")) {
       return reply({ error: "ログインが必要です" }, 401);
     }
 
@@ -56,7 +67,7 @@ Deno.serve(async (req: Request) => {
       return reply({ error: "サーバー設定エラー" }, 500);
     }
 
-    const userClient = createClient(url, anon);
+    const authClient = createClient(url, anon);
     const adminClient = createClient(url, service, {
       auth: {
         autoRefreshToken: false,
@@ -65,7 +76,9 @@ Deno.serve(async (req: Request) => {
     });
 
     const { data: authData, error: authError } =
-      await userClient.auth.getUser(auth.slice(7));
+      await authClient.auth.getUser(
+        authorization.slice(7)
+      );
 
     if (authError || !authData.user) {
       return reply({ error: "認証に失敗しました" }, 401);
@@ -88,7 +101,7 @@ Deno.serve(async (req: Request) => {
       return reply({ error: "ADMIN専用機能です" }, 403);
     }
 
-    let body: Record<string, unknown>;
+    let body: unknown;
 
     try {
       body = await req.json();
@@ -96,8 +109,16 @@ Deno.serve(async (req: Request) => {
       return reply({ error: "JSON形式が不正です" }, 400);
     }
 
-    const targetId = body.target_user_id;
-    const confirm = body.confirm;
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      Array.isArray(body)
+    ) {
+      return reply({ error: "入力形式が不正です" }, 400);
+    }
+
+    const input = body as Record<string, unknown>;
+    const targetId = input.target_user_id;
 
     const uuidPattern =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -121,7 +142,7 @@ Deno.serve(async (req: Request) => {
         .maybeSingle();
 
     if (targetAdminError) {
-      return reply({ error: "対象権限の確認エラー" }, 500);
+      return reply({ error: "対象権限確認エラー" }, 500);
     }
 
     if (targetAdmin) {
@@ -141,7 +162,7 @@ Deno.serve(async (req: Request) => {
 
     if (!allowed) {
       return reply({
-        error: "登録済みテストアカウント以外は変更できません",
+        error: "登録済みテストアカウント以外は対象外です",
       }, 403);
     }
 
@@ -152,88 +173,23 @@ Deno.serve(async (req: Request) => {
       return reply({ error: "対象ユーザーが存在しません" }, 404);
     }
 
-    if (confirm !== "ISSUE_TEST_PASSWORD") {
-      return reply({
-        success: true,
-        mode: "preview_only",
-        target_verified: true,
-        message:
-          "対象確認に成功しました。パスワードは変更していません。",
-      });
-    }
-
-    // 実際の発行処理。
-    // テスト対象登録とADMIN権限を確認した場合のみ実行。
-
-    const password = makePassword();
-    const now = new Date().toISOString();
-
-    const { error: stateError } = await adminClient
-      .from("sanno_password_reset_states")
-      .upsert(
-        {
-          user_id: targetId,
-          must_change_password: true,
-          reset_requested_at: now,
-          reset_requested_by: adminId,
-          password_changed_at: null,
-          updated_at: now,
-        },
-        { onConflict: "user_id" },
-      );
-
-    if (stateError) {
-      return reply({
-        error: "変更必須状態の記録に失敗しました",
-      }, 500);
-    }
-
-    const { error: updateError } =
-      await adminClient.auth.admin.updateUserById(
-        targetId,
-        { password },
-      );
-
-    if (updateError) {
-      return reply({
-        error:
-          "パスワード更新に失敗しました。変更必須状態を確認してください。",
-      }, 500);
-    }
-
-    const { error: logError } = await adminClient
-      .from("sanno_password_reset_logs")
-      .insert({
-        target_user_id: targetId,
-        reset_by: adminId,
-        reset_at: now,
-        action: "test_password_issued",
-        details: {
-          test_only: true,
-          password_stored: false,
-        },
-      });
-
-    if (logError) {
-      // Authの変更は成功済み。
-      // ログ記録失敗を隠さず通知する。
-      return reply({
-        success: true,
-        warning:
-          "パスワードは更新されましたが、履歴の記録に失敗しました。",
-        temporary_password: password,
-      });
-    }
+    // 安全確認段階：
+    // パスワード変更は意図的に無効化。
+    // 発行処理はデータベース側の
+    // 二重実行防止機構を実装後に追加する。
 
     return reply({
       success: true,
-      mode: "test_password_issued",
-      temporary_password: password,
-      must_change_password: true,
+      mode: "preview_only",
+      target_verified: true,
+      password_changed: false,
       message:
-        "テストアカウントの仮パスワードを発行しました。",
+        "ADMIN認証とテスト対象の確認に成功しました。パスワードは変更していません。",
     });
+
   } catch {
-    return reply({ error: "処理中にエラーが発生しました" }, 500);
+    return reply({
+      error: "処理中にエラーが発生しました",
+    }, 500);
   }
 });
