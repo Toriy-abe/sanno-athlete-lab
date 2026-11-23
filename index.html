@@ -450,6 +450,10 @@ button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-vis
 <div id="teamOverview"><p class="muted">「最新情報に更新」を押すと表示します。</p></div>
 <div id="teamDetails"></div>
 </div></div><div class="sanno-coach-section" data-coach-section="workout"><div class="card"><h2>DAILY ASSIGNMENT<small class="jp-sub">今日のメニューを配信</small></h2><p class="notice">グループごとに日付とDAYを指定すると、選手の画面に表示されます。</p><label>日付</label><input id="assignDate" type="date"/><label>グループ</label><select id="assignGroup"><option>FWD TIGHT 5</option><option>FWD BACK ROW</option><option>BKS</option></select><label>メニュー</label><select id="assignDay"><option value="1">DAY 1</option><option value="2">DAY 2</option><option value="3">DAY 3</option><option value="4">DAY 4</option><option value="5">DAY 5</option></select><p><button id="assignBtn">このメニューを配信</button></p><h3>配信済み</h3><div id="assignmentList"></div></div></div><div class="sanno-coach-section" data-coach-section="workout"><div class="card"><h2>WORKOUT BUILDER<small class="jp-sub">メニュー作成・編集</small></h2><label>グループ</label><select id="editGroup"><option>FWD TIGHT 5</option><option>FWD BACK ROW</option><option>BKS</option></select><label>DAY</label><select id="editDay"><option value="1">DAY 1</option><option value="2">DAY 2</option><option value="3">DAY 3</option><option value="4">DAY 4</option><option value="5">DAY 5</option></select><label>種目名</label><input id="editExercise" placeholder="例：ベンチプレス"/><div class="grid"><div><label>セット数</label><input id="editSets" min="1" type="number" value="3"/></div><div><label>回数</label><input id="editReps" min="1" type="number" value="5"/></div><div><label>目標強度（任意）</label><input id="editIntensity" placeholder="例：80%1RM"/></div><div><label>VIDEO GUIDE / 動画URL（任意）</label><input id="editVideo" placeholder="https://youtu.be/..." type="url"/></div></div><label><input id="editEachSide" type="checkbox" style="width:auto"> EACH SIDE / 左右それぞれ</label><label>回数表示（任意・例：6〜8）</label><input id="editRepsDisplay" placeholder="空欄なら回数の数字を表示"/><label>REST TIME / セット間休憩（秒）</label><input id="editRest" inputmode="numeric" max="3600" min="0" placeholder="例：180（3分）" step="30" type="number"/><small class="muted">種目ごとにCoachが指定。未入力なら「指定なし」。</small><p><button id="addExercise">種目を追加</button> <button class="secondary hidden" id="cancelExerciseEdit" type="button">編集をキャンセル</button></p><div id="editList"></div></div></div><div class="sanno-coach-section" data-coach-section="max"><div class="card"><h2>MAX測定会を作成</h2><label>測定日</label><input id="coachTestDate" type="date"/><label>測定会名</label><input id="coachTestTitle" value="全グループ共通 MAX測定"/><p><button id="createMaxEvent">測定会を公開する</button></p></div></div><div class="sanno-coach-section" data-coach-section="max"><div class="card"><h2>MAX承認（LINE動画を確認してから）</h2><button class="secondary" id="refreshApprovals">申請を更新</button><div id="coachApprovals"></div></div></div><div class="sanno-coach-section" data-coach-section="max"><div class="card"><h2>承認済みMAXの無効化（Coach専用）</h2><p class="notice">誤承認した記録だけを無効化できます。無効化後の取り消しはできません。理由（10文字以上）を入力し、確認してください。</p><div id="coachInvalidations"></div></div></div><div class="sanno-coach-section" data-coach-section="max"><div class="card"><h2>MAXランキング（Coach専用）</h2><small>最新の取得記録（最大1000件）から集計。大量の記録がある場合は全件集計への切替が必要です。</small><div id="coachRankings"></div></div></div><div class="sanno-coach-section" data-coach-section="players"><div class="card"><h2>PLAYERS <small class="jp-sub">選手一覧</small></h2><p class="muted">表示名・所属グループを管理できます。ADMINのみユーザー権限を変更できます。</p><p><button class="tiny" id="playersRefresh" type="button">REFRESH / 選手一覧を更新</button></p><div id="players"><p class="muted">選手一覧を読み込んでいます…</p></div><div id="sannoPlayerDetail" aria-live="polite"></div></div></div></div></section><footer>SANNO ATHLETE LAB · TRAIN · ANALYZE · IMPROVE</footer></main>
+<script id="sanno-grade-global-v2">
+function sannoSchoolYear(){const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric'}).formatToParts(new Date());const y=Number(parts.find(x=>x.type==='year').value),m=Number(parts.find(x=>x.type==='month').value);return y-(m<4?1:0)}
+function sannoGradeLabel(year){if(year===null||year===undefined||String(year).trim()==='')return '学年未設定';const grade=sannoSchoolYear()-Number(year)+1;return !Number.isFinite(grade)?'学年未設定':grade>=1&&grade<=3?grade+'年':grade>3?'卒業':'入学前'}
+</script>
 <script id="sanno-player-approval-v1">
 (function(){
 'use strict';
@@ -473,8 +477,7 @@ window.sannoCheckApproval=async function(){
  document.getElementById('sannoPendingLogout').onclick=()=>{session=null;profile=null;localStorage.removeItem(sessionKey);location.reload()};
  return false;
 };
-function sannoSchoolYear(){const parts=new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'numeric'}).formatToParts(new Date());const y=Number(parts.find(x=>x.type==='year').value),m=Number(parts.find(x=>x.type==='month').value);return y-(m<4?1:0)}
-function sannoGradeLabel(year){if(year===null||year===undefined||String(year).trim()==='')return '学年未設定';const grade=sannoSchoolYear()-Number(year)+1;return !Number.isFinite(grade)?'学年未設定':grade>=1&&grade<=3?grade+'年':grade>3?'卒業':'入学前'}
+
 async function loadApprovals(){
  if(profile?.role!=='coach')return;
  const host=document.getElementById('sannoApprovalList');if(!host)return;
@@ -1006,12 +1009,18 @@ async function sannoLoadTeamOverview(){
  }
  let completed=0,fullyLogged=0,notStarted=0;
  const cards=athletes.map((p,i)=>{
-  const assignment=assigned.get(p.training_group),menu=menus.find(m=>m.id===assignment?.menu_id);
-  const ex=Array.isArray(menu?.exercises)?menu.exercises:[];
+  const assignment=assigned.get(p.training_group);
   const playerLogs=logsByPlayer.get(p.id)||[];
+  // Prefer the menu actually recorded by this athlete on the selected date.
+  // A season/DAY rotation can be recorded without a daily_assignments row.
+  const assignedLogs=playerLogs.filter(l=>l.source==='assigned'&&l.menu_id);
+  const recordedMenuIds=[...new Set(assignedLogs.map(l=>l.menu_id))];
+  const selectedMenuId=recordedMenuIds[0]||assignment?.menu_id;
+  const menu=menus.find(m=>m.id===selectedMenuId);
+  const ex=Array.isArray(menu?.exercises)?menu.exercises:[];
   const latest=new Map();
-  for(const log of playerLogs){
-   if(log.source!=='assigned'||log.menu_id!==menu?.id)continue;
+  for(const log of assignedLogs){
+   if(log.menu_id!==selectedMenuId)continue;
    if(!latest.has(log.exercise_name))latest.set(log.exercise_name,log);
   }
   let done=0,skipped=0;
@@ -1023,16 +1032,16 @@ async function sannoLoadTeamOverview(){
   const total=ex.length,handled=done+skipped;
   if(total&&done===total)completed++;
   if(total&&handled===total)fullyLogged++;
-  if(!handled)notStarted++;
+  if(!handled&&!assignedLogs.length)notStarted++;
   const pct=total?Math.round(handled/total*100):0;
-  const status=!menu?'NO ASSIGNMENT':done===total?'DONE':handled===total?'LOGGED':handled?'IN PROGRESS':'NOT STARTED';
+  const status=!menu?(assignedLogs.length?'LOGGED':'NO ASSIGNMENT'):done===total&&total?'DONE':handled===total&&total?'LOGGED':handled||assignedLogs.length?'IN PROGRESS':'NOT STARTED';
   const details=menu?ex.map(x=>{
    const log=latest.get(x.name),st=sannoTeamLogStatus(log);
    return `<div class="sanno-team-exercise"><div class="row between"><strong>${safe(x.name)}</strong><span class="sanno-team-state ${st}">${st.toUpperCase()}</span></div>${sannoTeamSets(log)}</div>`;
-  }).join(''):'<p class="muted">このグループには対象日の配信メニューがありません。</p>';
+  }).join(''):assignedLogs.length?'<p class="muted">実施記録はありますが、対応するメニューを読み込めませんでした。</p>':'<p class="muted">この日付には配信・実施記録がありません。</p>';
   return `<details class="sanno-team-player"><summary><div class="sanno-team-player-head"><strong>${safe(p.display_name||'名前未設定')}</strong><small>${safe(p.training_group||'グループ未設定')} ／ ${menu?'DAY '+safe(menu.day_number):'未配信'}</small><span class="sanno-team-state ${status==='DONE'?'done':status==='IN PROGRESS'?'progress':'pending'}">${status}</span></div><div class="sanno-team-mini"><div style="width:${pct}%"></div></div><small>${done}/${total} 実施　${skipped} 未実施　${pct}% 記録済み</small></summary><div class="sanno-team-player-body">${details}</div></details>`;
  }).join('');
- $('teamOverview').innerHTML=`<div class="sanno-team-stats"><div><strong>${athletes.length}</strong><small>PLAYERS / 対象選手</small></div><div><strong>${completed}</strong><small>DONE / 全種目実施</small></div><div><strong>${fullyLogged}</strong><small>LOGGED / 全種目記録</small></div><div><strong>${notStarted}</strong><small>NOT STARTED / 記録なし</small></div></div><p class="muted">${safe(date)} ／ ${group==='all'?'全グループ':safe(group)}　※ 配信メニュー基準</p>${cards||'<p class="notice">対象の選手がいません。</p>'}`;
+ $('teamOverview').innerHTML=`<div class="sanno-team-stats"><div><strong>${athletes.length}</strong><small>PLAYERS / 対象選手</small></div><div><strong>${completed}</strong><small>DONE / 全種目実施</small></div><div><strong>${fullyLogged}</strong><small>LOGGED / 全種目記録</small></div><div><strong>${notStarted}</strong><small>NOT STARTED / 記録なし</small></div></div><p class="muted">${safe(date)} ／ ${group==='all'?'全グループ':safe(group)}　※ 当日の実施記録を優先し、記録がない場合は配信メニューを参照</p>${cards||'<p class="notice">対象の選手がいません。</p>'}`;
  }catch(e){$('teamOverview').innerHTML='<p class="notice">データを取得できませんでした。</p>';msg('TEAM OVERVIEW：'+e.message,true)}
 }
 $('teamRefresh').onclick=sannoLoadTeamOverview;
