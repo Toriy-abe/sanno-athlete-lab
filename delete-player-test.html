@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SANNO ADMIN TEST</title>
+<style>
+body {
+  background: #101014;
+  color: white;
+  font-family: sans-serif;
+  padding: 20px;
+}
+.card {
+  background: #211b30;
+  border-radius: 16px;
+  padding: 20px;
+}
+button {
+  width: 100%;
+  padding: 16px;
+  margin-top: 15px;
+  background: #65429b;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+</style>
+</head>
+<body>
+
+<h2>SANNO ATHLETE LAB</h2>
+<p>ADMIN / DELETE PLAYER TEST</p>
+
+<div class="card">
+  <h3>削除前確認テスト</h3>
+  <p>対象：sahsrfc.ob</p>
+  <p>このページから実際の削除は行いません。</p>
+
+  <button id="check">削除対象を確認する</button>
+
+  <pre id="result">確認待ち</pre>
+</div>
+
+<script>
+const url = "https://xiqtfetzlzqkbhgyseqh.supabase.co";
+const key = "sb_publishable_8V5gGyppGf-7P8iVSTOetw_QNPUYhIf";
+const target = "aa59925f-9f62-46ef-8d50-455da104ef15";
+
+document.getElementById("check").onclick = async () => {
+  const result = document.getElementById("result");
+  const button = document.getElementById("check");
+
+  button.disabled = true;
+  result.textContent = "確認中...";
+
+  try {
+    const session = JSON.parse(
+      localStorage.getItem("sanno_session_v1") || "null"
+    );
+
+    if (!session?.access_token) {
+      throw new Error("正式版でADMINログインしてください");
+    }
+
+    const response = await fetch(
+      url + "/functions/v1/sanno-delete-player",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": key,
+          "Authorization": "Bearer " + session.access_token
+        },
+        body: JSON.stringify({
+          target_user_id: target,
+          confirm: false
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    result.textContent =
+      "HTTP: " + response.status + "\n\n" +
+      JSON.stringify(data, null, 2);
+
+  } catch (error) {
+    result.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
+</script>
+
+</body>
+</html>
