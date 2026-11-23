@@ -28,4 +28,5 @@ jobs:
           SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
         run: |
           supabase functions deploy sanno-delete-player \
-            --project-ref "$SUPABASE_PROJECT_REF"
+            --remote="$SUPABASE_PROJECT_REF" \
+            --yes
