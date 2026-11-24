@@ -1069,6 +1069,36 @@ async function sannoChangeRole(id,name,newRole){
   await sannoLoadPlayers();
  }catch(e){msg('権限変更：'+e.message,true)}
 }
+let sannoDeletionBusy=false;
+async function sannoDeletePlayer(id,button){
+ if(sannoDeletionBusy||profile?.role!=='coach'||!session?.user?.id||id===session.user.id)return;
+ sannoDeletionBusy=true;
+ button.disabled=true;
+ let sent=false;
+ const actor=session.user.id;
+ try{
+  if(!await sannoCheckAdmin())throw Error('ADMIN権限が必要です');
+  const path='/functions/v1/sanno-delete-player';
+  const preview=await api(path,{method:'POST',body:JSON.stringify({target_user_id:id,confirm:false})});
+  if(preview?.success!==true||preview.mode!=='confirmation_required'||preview.target_user_id!==id||!preview.target_display_name)throw Error('削除対象を確認できませんでした');
+  const name=preview.target_display_name;
+  const typed=window.prompt(`${name} さんのアカウントと関連記録を完全削除します。\nこの操作は取り消せません。\n確認のため表示名を正確に入力してください。`,'');
+  if(typed===null)return;
+  if(typed!==name){msg('氏名が一致しないため削除を中止しました',true);return;}
+  if(!window.confirm(`${name} さんを完全削除しますか？\nトレーニング記録などの関連データも削除されます。`))return;
+  if(session?.user?.id!==actor||!await sannoCheckAdmin()||session?.user?.id!==actor)throw Error('ADMIN認証を確認できません');
+  sent=true;
+  // 削除リクエストは自動再試行しない。
+  const result=await request(path,{method:'POST',body:JSON.stringify({target_user_id:id,confirm:true,confirm_display_name:typed})});
+  if(result?.success!==true||result.mode!=='deleted'||result.target_user_id!==id)throw Error('削除結果を確認できません');
+  await sannoLoadPlayers();
+  if(result.log_saved!==true){msg(`${name} さんは削除されました。監査ログを管理者が確認してください。`,true);return;}
+  msg(`${name} さんのアカウントを削除しました`);
+ }catch(e){
+  if(sent){await sannoLoadPlayers().catch(()=>{});msg('削除結果を確認してください。再実行せず、Authと監査ログを確認してください。 '+e.message,true);}
+  else msg('削除前確認：'+e.message,true);
+ }finally{sannoDeletionBusy=false;if(!sent)button.disabled=false;}
+}
 async function sannoLoadPlayers(){
  if(profile?.role!=='coach')return;
  const box=$('players');
@@ -1083,6 +1113,18 @@ async function sannoLoadPlayers(){
   const athletes=p.filter(x=>x.role!=='coach');
   box.innerHTML=`<p class="muted">PLAYERS / 選手 ${athletes.length}名　（指導者 ${p.length-athletes.length}名）</p>`+
    p.map(x=>`<div class="item sanno-player-item"><strong>${safe(x.display_name||'名前未設定')} ${x.role==='coach'?'（指導者）':'（'+safe(sannoGradeLabel(x.admission_year))+'）'}</strong><p><button type="button" class="tiny secondary" data-detail-id="${safe(x.id)}">VIEW PROFILE / 選手詳細</button></p><div class="row"><select aria-label="所属グループ" data-group-id="${safe(x.id)}" style="flex:1">${['',...groups].map(g=>`<option value="${safe(g)}" ${x.training_group===g?'selected':''}>${safe(g||'未設定')}</option>`).join('')}</select><button class="tiny" data-save-id="${safe(x.id)}">保存</button></div>${isAdmin&&x.id!==session?.user?.id?`<p><button type="button" class="tiny secondary" data-role-id="${safe(x.id)}" data-role-name="${safe(x.display_name||'名前未設定')}" data-new-role="${x.role==='coach'?'player':'coach'}">${x.role==='coach'?'選手に戻す':'コーチに変更'}（ADMIN）</button></p>`:''}</div>`).join('');
+  if(isAdmin){
+   const cards=box.querySelectorAll('.sanno-player-item');
+   p.forEach((x,i)=>{
+    if(x.role!=='player'||x.id===session?.user?.id||!cards[i])return;
+    const row=document.createElement('p');
+    const b=document.createElement('button');
+    b.type='button';b.className='tiny';b.style.cssText='background:#a52838;color:#fff;border:1px solid #d15b69;';
+    b.textContent='DELETE ACCOUNT / 選手削除（ADMIN）';
+    b.onclick=()=>sannoDeletePlayer(x.id,b);
+    row.append(b);cards[i].append(row);
+   });
+  }
   box.querySelectorAll('[data-detail-id]').forEach(b=>b.onclick=()=>sannoPlayerDetails(b.dataset.detailId));
   box.querySelectorAll('[data-role-id]').forEach(b=>b.onclick=()=>sannoChangeRole(b.dataset.roleId,b.dataset.roleName,b.dataset.newRole));
   box.querySelectorAll('[data-save-id]').forEach(b=>b.onclick=async()=>{
