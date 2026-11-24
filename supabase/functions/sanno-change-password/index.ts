@@ -1,4 +1,7 @@
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { import { createClient } from "npm:@supabase/supabase-js@2";
+
+const TEST_USER_ID =
+  "b1fc45aa-7721-476e-8994-ca552d772e75";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin":
@@ -35,27 +38,46 @@ Deno.serve(async (req) => {
     }, 405);
   }
 
+  const url = Deno.env.get("SUPABASE_URL")!;
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const serviceKey =
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+  const options = {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  };
+
+  const client = createClient(
+    url, anonKey, options
+  );
+
+  const admin = createClient(
+    url, serviceKey, options
+  );
+
+  let userId: string | null = null;
+  let requestId: string | null = null;
+  let acquired = false;
+
+  async function markForReview() {
+    if (!acquired || !userId || !requestId) {
+      return;
+    }
+
+    await admin.rpc(
+      "sanno_finish_password_reset_lock",
+      {
+        p_user_id: userId,
+        p_request_id: requestId,
+        p_status: "needs_review",
+      }
+    );
+  }
+
   try {
-    const url = Deno.env.get("SUPABASE_URL")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const serviceKey =
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    const options = {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    };
-
-    const client = createClient(
-      url, anonKey, options
-    );
-
-    const admin = createClient(
-      url, serviceKey, options
-    );
-
     const authorization =
       req.headers.get("Authorization") || "";
 
@@ -77,12 +99,9 @@ Deno.serve(async (req) => {
     }
 
     const user = authData.user;
+    userId = user.id;
 
-    // 検証用アカウント限定
-    if (
-      user.id !==
-      "b1fc45aa-7721-476e-8994-ca552d772e75"
-    ) {
+    if (userId !== TEST_USER_ID) {
       return respond({
         error: "Test account only",
       }, 403);
@@ -97,7 +116,6 @@ Deno.serve(async (req) => {
       typeof temporary_password !== "string" ||
       typeof new_password !== "string" ||
       new_password.length < 8 ||
-      new_password.length > 72 ||
       new TextEncoder().encode(new_password).length > 72 ||
       temporary_password === new_password
     ) {
@@ -110,7 +128,7 @@ Deno.serve(async (req) => {
       await admin
         .from("sanno_password_reset_states")
         .select("must_change_password")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .single();
 
     if (
@@ -126,7 +144,7 @@ Deno.serve(async (req) => {
       await admin
         .from("sanno_password_reset_locks")
         .select("request_id, status")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .single();
 
     if (
@@ -138,13 +156,14 @@ Deno.serve(async (req) => {
       }, 409);
     }
 
+    requestId = lock.request_id;
+
     if (!user.email) {
       return respond({
         error: "Email unavailable",
       }, 400);
     }
 
-    // 現在のパスワードで本人確認
     const { data: verified, error: verifyError } =
       await client.auth.signInWithPassword({
         email: user.email,
@@ -153,23 +172,110 @@ Deno.serve(async (req) => {
 
     if (
       verifyError ||
-      verified.user?.id !== user.id
+      verified.user?.id !== userId ||
+      !verified.session
     ) {
       return respond({
         error: "Password verification failed",
       }, 401);
     }
 
-    // 現段階では本人確認まで実施
-    // 更新・解除処理は次のSTEPで追加
+    // 二重実行防止
+    const {
+      data: beginResult,
+      error: beginError,
+    } = await admin.rpc(
+      "sanno_begin_password_change",
+      {
+        p_user_id: userId,
+        p_request_id: requestId,
+      }
+    );
+
+    if (beginError || beginResult !== true) {
+      await client.auth.signOut({
+        scope: "local",
+      });
+
+      return respond({
+        error: "Password change already processing",
+      }, 409);
+    }
+
+    acquired = true;
+
+    // 新しいパスワードへ更新
+    const { error: updateError } =
+      await admin.auth.admin.updateUserById(
+        userId,
+        {
+          password: new_password,
+        }
+      );
+
+    if (updateError) {
+      await markForReview();
+
+      return respond({
+        error: "Password update requires review",
+      }, 500);
+    }
+
+    // 既存セッションの失効
+    const { error: signOutError } =
+      await admin.auth.admin.signOut(
+        verified.session.access_token,
+        "global"
+      );
+
+    if (signOutError) {
+      await markForReview();
+
+      return respond({
+        error: "Session revocation requires review",
+      }, 500);
+    }
+
+    // 利用制限解除・監査ログ保存
+    const {
+      data: completeResult,
+      error: completeError,
+    } = await admin.rpc(
+      "sanno_complete_password_change",
+      {
+        p_user_id: userId,
+        p_request_id: requestId,
+      }
+    );
+
+    if (
+      completeError ||
+      completeResult !== true
+    ) {
+      await markForReview();
+
+      return respond({
+        error: "Completion requires review",
+      }, 500);
+    }
+
+    acquired = false;
+
     return respond({
       success: true,
-      mode: "verification_only",
-      password_verified: true,
-      must_change_password: true,
+      mode: "test_only",
+      password_changed: true,
+      must_change_password: false,
+      login_required: true,
     });
 
   } catch {
+    try {
+      await markForReview();
+    } catch {
+      // 利用制限を維持
+    }
+
     return respond({
       error: "Internal server error",
     }, 500);
