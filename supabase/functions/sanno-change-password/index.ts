@@ -222,19 +222,35 @@ Deno.serve(async (req) => {
     }
 
     // 既存セッションの失効
-    const { error: signOutError } =
-      await admin.auth.admin.signOut(
-        verified.session.access_token,
-        "global"
-      );
+    const {data:sessionCount,error:sessionCountError}
+  = await admin.rpc("sanno_count_reset_sessions",{
+    p_user_id:userId
+  });
 
-    if (signOutError) {
-      await markForReview();
+if(sessionCountError || sessionCount===null){
+  await markForReview();
+  return respond({
+    error:"Session check requires review"
+  },500);
+}
 
-      return respond({
-        error: "Session revocation requires review",
-      }, 500);
-    }
+if(Number(sessionCount)>0){
+  await admin.auth.admin.signOut(
+    verified.session.access_token,"global"
+  );
+}
+
+const {data:remainingSessions,error:remainingError}
+  = await admin.rpc("sanno_count_reset_sessions",{
+    p_user_id:userId
+  });
+
+if(remainingError || remainingSessions===null || Number(remainingSessions)!==0){
+  await markForReview();
+  return respond({
+    error:"Session revocation requires review"
+  },500);
+}
 
     // 利用制限解除・監査ログ保存
     const {
