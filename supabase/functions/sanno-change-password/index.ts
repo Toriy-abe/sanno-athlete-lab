@@ -1,4 +1,4 @@
-import { import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const TEST_USER_ID =
   "b1fc45aa-7721-476e-8994-ca552d772e75";
