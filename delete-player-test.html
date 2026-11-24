@@ -80,7 +80,8 @@ document.getElementById("check").onclick = async () => {
         },
         body: JSON.stringify({
           target_user_id: target,
-          confirm: false
+          confirm: true,
+confirm_display_name: "INVALID_TEST_NAME"
         })
       }
     );
