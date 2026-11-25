@@ -68,10 +68,11 @@ Deno.serve(async (req) => {
     }
 
     await admin.rpc(
-      "sanno_finish_password_reset_lock",
+      "sanno_fail_password_operation_v2",
       {
         p_user_id: userId,
         p_request_id: requestId,
+        p_operation: "change",
         p_status: "needs_review",
       }
     );
@@ -143,13 +144,14 @@ Deno.serve(async (req) => {
     const { data: lock, error: lockError } =
       await admin
         .from("sanno_password_reset_locks")
-        .select("request_id, status")
+        .select("request_id, status, operation")
         .eq("user_id", userId)
         .single();
 
     if (
       lockError ||
-      lock?.status !== "completed"
+      lock?.status !== "completed" ||
+      lock.operation !== "issue"
     ) {
       return respond({
         error: "Reset not ready",
@@ -185,7 +187,7 @@ Deno.serve(async (req) => {
       data: beginResult,
       error: beginError,
     } = await admin.rpc(
-      "sanno_begin_password_change",
+      "sanno_begin_password_change_v2",
       {
         p_user_id: userId,
         p_request_id: requestId,
@@ -223,7 +225,7 @@ Deno.serve(async (req) => {
 
     // 既存セッションの失効
     const {data:sessionCount,error:sessionCountError}
-  = await admin.rpc("sanno_count_reset_sessions",{
+  = await admin.rpc("sanno_count_reset_sessions_v2",{
     p_user_id:userId
   });
 
@@ -241,7 +243,7 @@ if(Number(sessionCount)>0){
 }
 
 const {data:remainingSessions,error:remainingError}
-  = await admin.rpc("sanno_count_reset_sessions",{
+  = await admin.rpc("sanno_count_reset_sessions_v2",{
     p_user_id:userId
   });
 
@@ -257,7 +259,7 @@ if(remainingError || remainingSessions===null || Number(remainingSessions)!==0){
       data: completeResult,
       error: completeError,
     } = await admin.rpc(
-      "sanno_complete_password_change",
+      "sanno_complete_password_change_v2",
       {
         p_user_id: userId,
         p_request_id: requestId,
