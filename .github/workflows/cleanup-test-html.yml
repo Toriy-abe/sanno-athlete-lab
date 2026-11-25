@@ -25,19 +25,19 @@ jobs:
         run: |
           set -euo pipefail
           files=(
-            admin-password-reset-test.html
-            password-change-test.html
-            sanno-integration-v1.html
-            sanno-integration-v2.html
-            sanno-monitor-simulation.html
-            sanno-password-monitor-v1.html
-            sanno-password-monitor-v2.html
-            sanno-password-recovery-v2.html
-            sanno-password-ui-test.html
-            sanno-reset-network-test.html
+            sanno-admin-auth-check.html
+            sanno-reset-password-auth-check.html
+            sanno-reset-password-target-check.html
+            sanno-team-overview-season-test.html
           )
           echo 'Root HTML files:'
           git ls-files -- '*.html' | grep -v / || true
+          for f in "${files[@]}"; do
+            if grep -Fq -- "$f" index.html; then
+              echo "Production reference found: $f"; exit 1
+            fi
+          done
+          echo "Mode: $MODE" >> "$GITHUB_STEP_SUMMARY"
           echo '## Cleanup targets' >> "$GITHUB_STEP_SUMMARY"
           for f in "${files[@]}"; do
             if git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then
