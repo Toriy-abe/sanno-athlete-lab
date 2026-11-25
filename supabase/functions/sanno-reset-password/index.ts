@@ -172,104 +172,51 @@ Deno.serve(async (req: Request) => {
     }
 
     const requestId = crypto.randomUUID();
-
     const { data: acquired, error: lockError } =
-      await adminClient.rpc(
-        "sanno_acquire_password_reset_lock",
-        {
-          p_user_id: targetId,
-          p_request_id: requestId,
-          p_admin_id: adminId,
-        }
-      );
-
+      await adminClient.rpc("sanno_prepare_password_reset_v2", {
+        p_user_id: targetId,
+        p_request_id: requestId,
+        p_admin_id: adminId,
+      });
     if (lockError || acquired !== true) {
-      return respond({
-        error: "再設定ロックを取得できません",
-      }, 409);
+      return respond({ error: "再設定を開始できません。状態を確認してください", request_id: requestId }, 409);
     }
 
     async function finish(status: string) {
       const { data, error } = await adminClient.rpc(
-        "sanno_finish_password_reset_lock",
-        {
+        "sanno_fail_password_operation_v2", {
           p_user_id: targetId,
           p_request_id: requestId,
+          p_operation: "issue",
           p_status: status,
-        }
-      );
-
+        });
       return !error && data === true;
     }
 
     try {
       const temporaryPassword = generatePassword();
-      const now = new Date().toISOString();
-
-      const { error: stateError } =
-        await adminClient
-          .from("sanno_password_reset_states")
-          .upsert({
-            user_id: targetId,
-            must_change_password: true,
-            reset_requested_at: now,
-            reset_requested_by: adminId,
-            password_changed_at: null,
-            updated_at: now,
-          });
-
-      if (stateError) {
-        await finish("failed");
-
-        return respond({
-          error: "再設定状態の保存に失敗しました",
-        }, 500);
-      }
-
       const { error: passwordError } =
-        await adminClient.auth.admin.updateUserById(
-          targetId,
-          { password: temporaryPassword }
-        );
-
+        await adminClient.auth.admin.updateUserById(targetId, {
+          password: temporaryPassword,
+        });
       if (passwordError) {
         await finish("needs_review");
-
-        return respond({
-          error: "パスワード変更結果の確認が必要です",
-          request_id: requestId,
-        }, 500);
+        return respond({ error: "パスワード変更結果の確認が必要です", request_id: requestId }, 500);
       }
-
-      const { error: logError } =
-        await adminClient
-          .from("sanno_password_reset_logs")
-          .insert({
-            target_user_id: targetId,
-            reset_by: adminId,
-            action: "temporary_password_issued",
-            details: {
-              request_id: requestId,
-              test_mode: true,
-            },
-          });
-
-      if (logError) {
+      const { data: count, error: countError } = await adminClient.rpc(
+        "sanno_count_reset_sessions_v2", { p_user_id: targetId });
+      if (countError || count !== 0) {
         await finish("needs_review");
-
-        return respond({
-          error: "パスワード変更済み・監査ログ要確認",
-          request_id: requestId,
-        }, 500);
+        return respond({ error: "残存セッションの確認が必要です", request_id: requestId }, 500);
       }
-
-      const completed = await finish("completed");
-
-      if (!completed) {
-        return respond({
-          error: "パスワード変更済み・ロック状態要確認",
-          request_id: requestId,
-        }, 500);
+      const { data: completed, error: completeError } = await adminClient.rpc(
+        "sanno_complete_password_reset_v2", {
+          p_user_id: targetId,
+          p_request_id: requestId,
+        });
+      if (completeError || completed !== true) {
+        await finish("needs_review");
+        return respond({ error: "発行完了状態の確認が必要です", request_id: requestId }, 500);
       }
 
       return respond({
