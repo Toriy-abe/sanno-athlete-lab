@@ -1,8 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const TEST_USER_ID =
-  "b1fc45aa-7721-476e-8994-ca552d772e75";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin":
     "https://toriy-abe.github.io",
@@ -102,10 +99,15 @@ Deno.serve(async (req) => {
     const user = authData.user;
     userId = user.id;
 
-    if (userId !== TEST_USER_ID) {
-      return respond({
-        error: "Test account only",
-      }, 403);
+    const { data: profile, error: profileError } = await admin
+      .from("profiles").select("role").eq("id", userId).maybeSingle();
+    const { data: protectedAccount, error: protectedError } = await admin
+      .from("app_admins").select("user_id").eq("user_id", userId).maybeSingle();
+    if (profileError || protectedError) {
+      return respond({ error: "Account check failed" }, 500);
+    }
+    if (profile?.role !== "player" || protectedAccount) {
+      return respond({ error: "Player account only" }, 403);
     }
 
     const {
@@ -281,7 +283,7 @@ if(remainingError || remainingSessions===null || Number(remainingSessions)!==0){
 
     return respond({
       success: true,
-      mode: "test_only",
+      mode: "production",
       password_changed: true,
       must_change_password: false,
       login_required: true,
