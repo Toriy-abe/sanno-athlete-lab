@@ -54,7 +54,34 @@ Deno.serve(async (req) => {
     if (authError || !authData.user) {
       return respond({ error: "認証に失敗しました" }, 401);
     }
+    const sessionClient = createClient(
+      supabaseUrl,
+      anonKey,
+      {
+        global: {
+          headers: {
+            Authorization: authHeader,
+          },
+        },
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+        },
+      },
+    );
 
+    const {
+      data: sessionAllowed,
+      error: sessionError,
+    } = await sessionClient.rpc(
+      "sanno_session_allowed"
+    );
+
+    if (sessionError || sessionAllowed !== true) {
+      return respond({
+        error: "セッションが無効です。再ログインしてください",
+      }, 403);
+    }
     const adminClient = createClient(
       supabaseUrl,
       serviceRoleKey,
