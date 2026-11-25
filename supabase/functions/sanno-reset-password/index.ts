@@ -171,13 +171,24 @@ Deno.serve(async (req: Request) => {
       return respond({ error: "氏名確認が一致しません" }, 400);
     }
 
+    const recovery = body.mode === "recovery";
+    if (body.mode !== undefined && body.mode !== "recovery") {
+      return respond({ error: "Invalid mode" }, 400);
+    }
     const requestId = crypto.randomUUID();
-    const { data: acquired, error: lockError } =
-      await adminClient.rpc("sanno_prepare_password_reset_v2", {
-        p_user_id: targetId,
-        p_request_id: requestId,
-        p_admin_id: adminId,
-      });
+    let recoveryArgs = {};
+    if (recovery) {
+      if (typeof body.recovery_reason !== "string" || !body.recovery_reason.trim() || body.recovery_reason.length > 500) {
+        return respond({ error: "復旧理由を入力してください" }, 400);
+      }
+      const { data: lock, error } = await adminClient.from("sanno_password_reset_locks").select("request_id,status").eq("user_id",targetId).maybeSingle();
+      if (error || lock?.status !== "failed") return respond({ error: "復旧可能な状態ではありません" },409);
+      recoveryArgs = { p_old_request_id: lock.request_id, p_new_request_id: requestId, p_reason: body.recovery_reason.trim() };
+    }
+    const { data: acquired, error: lockError } = await adminClient.rpc(
+      recovery ? "sanno_prepare_password_recovery_v2" : "sanno_prepare_password_reset_v2",
+      { p_user_id: targetId, p_admin_id: adminId, ...(recovery ? recoveryArgs : { p_request_id: requestId }) }
+    );
     if (lockError || acquired !== true) {
       return respond({ error: "再設定を開始できません。状態を確認してください", request_id: requestId }, 409);
     }
