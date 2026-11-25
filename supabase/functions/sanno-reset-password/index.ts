@@ -121,13 +121,9 @@ Deno.serve(async (req: Request) => {
 
     const targetId = body.target_user_id;
 
-    if (
-      targetId !==
-      "b1fc45aa-7721-476e-8994-ca552d772e75"
-    ) {
-      return respond({
-        error: "現在は検証用アカウントのみ対応しています",
-      }, 403);
+    if (typeof targetId !== "string" ||
+        !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetId)) {
+      return respond({ error: "対象者IDが無効です" }, 400);
     }
 
     if (targetId === adminId) {
@@ -232,7 +228,7 @@ Deno.serve(async (req: Request) => {
 
       return respond({
         success: true,
-        mode: "test_only",
+        mode: "production",
         target_user_id: targetId,
         target_display_name: target.display_name,
         temporary_password: temporaryPassword,
