@@ -1,0 +1,59 @@
+name: STEP 19 repository cleanup
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        type: choice
+        required: true
+        default: preview
+        options: [preview, delete]
+permissions:
+  contents: write
+jobs:
+  cleanup:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and clean
+        env:
+          MODE: ${{ inputs.mode }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          targets=(
+            .github/workflows/cleanup-test-html.yml
+            .github/workflows/deploy-sanno-reset-lock-check.yml
+            .github/workflows/deploy-sanno-reset-lock-finish-test.yml
+            .github/workflows/deploy-sanno-reset-lock-release-test.yml
+            .github/workflows/deploy-sanno-reset-lock-test.yml
+            .github/workflows/deploy-sanno-reset-password-test.yml
+            .github/workflows/deploy-sanno-temp-password-test.yml
+            supabase/functions/sanno-reset-lock-check/index.ts
+            supabase/functions/sanno-reset-lock-finish-test/index.ts
+            supabase/functions/sanno-reset-lock-release-test/index.ts
+            supabase/functions/sanno-reset-lock-test/index.ts
+            supabase/functions/sanno-reset-password-issue-test/index.ts
+            supabase/functions/sanno-reset-password-test/index.ts
+            supabase/functions/sanno-temp-password-test/index.ts
+          )
+          keep=(index.html)
+          for n in sanno-change-password sanno-delete-player sanno-reset-password; do
+            keep+=("supabase/functions/$n/index.ts" ".github/workflows/deploy-$n.yml")
+          done
+          for f in "${keep[@]}"; do test -f "$f"; done
+          for f in "${targets[@]}"; do
+            if [[ "$f" == supabase/* ]]; then
+              n=$(basename "$(dirname "$f")")
+              if grep -Fq -- "$n" "${keep[@]}"; then echo "Reference found: $n"; exit 1; fi
+            fi
+            git ls-files --error-unmatch -- "$f" >/dev/null
+            echo "$f" >> "$GITHUB_STEP_SUMMARY"
+          done
+          if [[ "$MODE" == delete ]]; then
+            git rm -- "${targets[@]}"
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'STEP 19 remove retired test sources and workflows'
+            git push origin HEAD:main
+          fi
