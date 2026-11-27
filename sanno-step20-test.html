@@ -2141,10 +2141,24 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 #sannoSeasonPanel .sswrap{max-width:680px;margin:auto}#sannoSeasonPanel h2{font-size:21px;margin:10px 0}#sannoSeasonPanel h3{font-size:16px;margin:15px 0 8px}#sannoSeasonPanel .sscard{background:#1c122d;border:1px solid #4a3267;border-radius:15px;padding:14px;margin:12px 0}#sannoSeasonPanel button{background:#673ab1;color:white;border:1px solid #9870d1;border-radius:9px;padding:10px 12px;font-weight:700;margin:4px 3px 4px 0}#sannoSeasonPanel button:disabled{opacity:.45}#sannoSeasonPanel input,#sannoSeasonPanel select,#sannoSeasonPanel textarea{box-sizing:border-box;width:100%;background:#100a20;color:white;border:1px solid #695182;border-radius:8px;padding:10px;margin:5px 0 10px;font-size:16px}#sannoSeasonPanel label{font-size:13px;color:#cfc0e5}#sannoSeasonPanel .ssmuted{color:#b6a7c8;font-size:12px}#sannoSeasonPanel .ssrow{border-top:1px solid #46315e;padding:10px 0}#sannoSeasonPanel .ssbadge{background:#3e285a;border-radius:8px;padding:4px 8px}#sannoSeasonPanel #ssMessage{white-space:pre-wrap;color:#d7c1ff;font-size:13px}
 </style>
 <button id="sannoSeasonLaunch" type="button">SEASON / DAY</button>
+<style id="sanno-season-layout-v4">
+#sannoSeasonPanel .sscard{padding:16px;margin:14px 0}
+#sannoSeasonPanel .sscard>h3{margin:0 0 16px;line-height:1.45}
+#sannoSeasonPanel #ssCurrent{margin:0 0 14px;line-height:1.6}
+#sannoSeasonPanel .ssSeasonActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#sannoSeasonPanel .ssSeasonActions button{margin:0;min-height:46px;padding:10px 6px;font-size:13px;line-height:1.4;white-space:normal}
+#sannoSeasonPanel #ssRotations>h3{margin:20px 0 8px;color:#d7baff;font-size:13px;letter-spacing:.09em}
+#sannoSeasonPanel #ssRotations>h3:first-child{margin-top:0}
+#sannoSeasonPanel #ssRotations .ssRotationRow{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px 0}
+#sannoSeasonPanel .ssRotationInfo{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:0}
+#sannoSeasonPanel .ssRotationInfo b{font-size:14px;line-height:1.35;overflow-wrap:anywhere}
+#sannoSeasonPanel .ssRotationInfo .ssbadge{font-size:12px;line-height:1.3;padding:4px 9px;white-space:nowrap}
+#sannoSeasonPanel .ssRotationRow button{margin:0;min-height:44px;padding:9px 12px;font-size:13px;white-space:nowrap}
+</style>
 <section id="sannoSeasonPanel" aria-label="SEASON / DAY 管理"><div class="sswrap">
 <div style="display:flex;align-items:center;justify-content:space-between"><h2>SEASON / DAY <small style="font-size:12px">管理</small></h2><button id="ssClose" type="button">✕ 閉じる</button></div>
 <p class="ssmuted">テスト版：変更はSupabaseに保存されます。操作前に対象を確認してください。</p>
-<div class="sscard"><h3>TRAINING SEASON｜期の切り替え</h3><div id="ssCurrent">読み込み中</div><button id="ssToRegular">通常期へ切り替え</button><button id="ssToMatch">試合期へ切り替え</button></div>
+<div class="sscard"><h3>TRAINING SEASON｜期の切り替え</h3><div id="ssCurrent">読み込み中</div><div class="ssSeasonActions"><button id="ssToRegular">通常期へ切り替え</button><button id="ssToMatch">試合期へ切り替え</button></div></div>
 <div class="sscard"><h3>DAY ROTATION｜進行状況</h3><div id="ssRotations"></div></div>
 <div class="sscard"><h3>MATCH MENUS｜試合期メニュー</h3><div id="ssMatchMenus"></div></div>
 <div class="sscard"><h3>SCHEDULE｜予定の登録</h3><label>日付<input id="ssDate" type="date"></label><label>種類<select id="ssType"><option value="training">TRAINING / ウエイト</option><option value="rest">REST / 休養</option><option value="match">MATCH / 試合</option><option value="practice">PRACTICE / 練習</option><option value="test_day">TEST DAY / 測定</option></select></label><label>対象<select id="ssGroup"><option value="">全グループ共通</option><option>FWD TIGHT 5</option><option>FWD BACK ROW</option><option>BKS</option></select></label><label>タイトル<input id="ssTitle" maxlength="100" placeholder="例：全体ウエイト"></label><label>備考<textarea id="ssNotes" rows="2"></textarea></label><button id="ssAddSchedule">予定を登録</button><h3>直近の予定</h3><div id="ssSchedules"></div></div>
@@ -2173,7 +2187,7 @@ try{
  phase=ps?.[0]?.phase||'regular';rotations=rs||[];
  $s('ssCurrent').innerHTML='<span class="ssbadge">'+(phase==='regular'?'REGULAR SEASON / 通常期':'MATCH SEASON / 試合期')+'</span>';
  $s('ssToRegular').disabled=phase==='regular';$s('ssToMatch').disabled=phase==='match';
- $s('ssRotations').innerHTML=['regular','match'].map(p=>'<h3>'+(p==='regular'?'REGULAR':'MATCH')+'</h3>'+groups.map(g=>{const r=rotations.find(x=>x.phase===p&&x.training_group===g);return '<div class="ssrow"><b>'+escS(g)+'</b> <span class="ssbadge">DAY '+(r?.next_day??'?')+'</span><br><button data-complete="1" data-phase="'+p+'" data-group="'+g+'" '+(!r?'disabled':'')+'>✓ DAY完了</button></div>'}).join('')).join('');
+ $s('ssRotations').innerHTML=['regular','match'].map(p=>'<h3>'+(p==='regular'?'REGULAR':'MATCH')+'</h3>'+groups.map(g=>{const r=rotations.find(x=>x.phase===p&&x.training_group===g);return '<div class="ssrow ssRotationRow"><div class="ssRotationInfo"><b>'+escS(g)+'</b><span class="ssbadge">DAY '+(r?.next_day??'?')+'</span></div><button data-complete="1" data-phase="'+p+'" data-group="'+g+'" '+(!r?'disabled':'')+'>✓ DAY完了</button></div>'}).join('')).join('');
  $s('ssMatchMenus').innerHTML=(ms||[]).map(m=>'<div class="ssrow"><b>DAY '+m.day_number+'｜'+escS(m.title)+'</b><div class="ssmuted">'+(m.exercises||[]).map(e=>escS(e.name)+' / '+escS(e.sets)+'×'+escS(e.reps_display||e.reps)+' / '+escS(e.intensity)).join('<br>')+'</div></div>').join('')||'未登録';
  $s('ssSchedules').innerHTML=(sc||[]).map(x=>'<div class="ssrow"><b>'+escS(x.scheduled_date)+'　'+escS(x.schedule_type).toUpperCase()+'</b><br>'+escS(x.training_group||'ALL GROUPS')+' / '+escS(x.title)+'</div>').join('')||'<span class="ssmuted">登録された予定はありません</span>';
  msgS('最新データを読み込みました。');
